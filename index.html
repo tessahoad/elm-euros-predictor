@@ -10917,8 +10917,48 @@ var $author$project$API$Fixture = F4(
 	function (homeTeam, awayTeam, result, round) {
 		return {awayTeam: awayTeam, homeTeam: homeTeam, result: result, round: round};
 	});
-var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
+var $author$project$API$Draw = {$: 'Draw'};
+var $author$project$API$HomeLoss = {$: 'HomeLoss'};
+var $author$project$API$HomeWin = {$: 'HomeWin'};
 var $elm$json$Json$Decode$andThen = _Json_andThen;
+var $author$project$API$decodeGameResult = A2(
+	$elm$json$Json$Decode$andThen,
+	function (resultString) {
+		switch (resultString) {
+			case 'HomeWin':
+				return $elm$json$Json$Decode$succeed(
+					$elm$core$Maybe$Just($author$project$API$HomeWin));
+			case 'Draw':
+				return $elm$json$Json$Decode$succeed(
+					$elm$core$Maybe$Just($author$project$API$Draw));
+			case 'HomeLoss':
+				return $elm$json$Json$Decode$succeed(
+					$elm$core$Maybe$Just($author$project$API$HomeLoss));
+			default:
+				return $elm$json$Json$Decode$succeed($elm$core$Maybe$Nothing);
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $author$project$API$Round1 = {$: 'Round1'};
+var $author$project$API$Round2 = {$: 'Round2'};
+var $author$project$API$Round3 = {$: 'Round3'};
+var $elm$json$Json$Decode$fail = _Json_fail;
+var $author$project$API$decodeRound = A2(
+	$elm$json$Json$Decode$andThen,
+	function (roundString) {
+		switch (roundString) {
+			case 'Round1':
+				return $elm$json$Json$Decode$succeed($author$project$API$Round1);
+			case 'Round2':
+				return $elm$json$Json$Decode$succeed($author$project$API$Round2);
+			case 'Round3':
+				return $elm$json$Json$Decode$succeed($author$project$API$Round3);
+			default:
+				return $elm$json$Json$Decode$fail(roundString);
+		}
+	},
+	$elm$json$Json$Decode$string);
+var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = $elm$json$Json$Decode$map2($elm$core$Basics$apR);
 var $elm$json$Json$Decode$null = _Json_decodeNull;
 var $elm$json$Json$Decode$oneOf = _Json_oneOf;
 var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optionalDecoder = F3(
@@ -10979,12 +11019,12 @@ var $NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
 var $author$project$API$decodeFixture = A3(
 	$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 	'round',
-	$elm$json$Json$Decode$string,
+	$author$project$API$decodeRound,
 	A4(
 		$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$optional,
 		'result',
-		$elm$json$Json$Decode$string,
-		'Unplayed',
+		$author$project$API$decodeGameResult,
+		$elm$core$Maybe$Nothing,
 		A3(
 			$NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
 			'awayTeam',
@@ -11296,9 +11336,6 @@ var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$API$Final = {$: 'Final'};
 var $author$project$API$QuarterFinal = {$: 'QuarterFinal'};
-var $author$project$API$Round1 = {$: 'Round1'};
-var $author$project$API$Round2 = {$: 'Round2'};
-var $author$project$API$Round3 = {$: 'Round3'};
 var $author$project$API$SemiFinal = {$: 'SemiFinal'};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
@@ -11316,17 +11353,13 @@ var $author$project$Main$isGroupRound = F2(
 		return _Utils_eq(round, fixture.round);
 	});
 var $author$project$Main$isPlayedFixture = function (fixture) {
-	return fixture.result !== 'Unplayed';
+	return !_Utils_eq(fixture.result, $elm$core$Maybe$Nothing);
 };
 var $author$project$Main$isUnplayedFixture = function (fixture) {
-	return fixture.result === 'Unplayed';
+	return _Utils_eq(fixture.result, $elm$core$Maybe$Nothing);
 };
-var $author$project$API$Draw = {$: 'Draw'};
-var $author$project$API$HomeLoss = {$: 'HomeLoss'};
-var $author$project$API$HomeWin = {$: 'HomeWin'};
-var $elm$core$Debug$log = _Debug_log;
 var $elm$core$Basics$pow = _Basics_pow;
-var $author$project$Main$fixtureResult = F3(
+var $author$project$Main$getFixtureResult = F3(
 	function (homeRating, awayRating, randomFloat) {
 		var ratingDiff = awayRating - homeRating;
 		var x = ratingDiff / 400;
@@ -11334,12 +11367,6 @@ var $author$project$Main$fixtureResult = F3(
 		var probability = 1 / y;
 		var homeWins = _Utils_cmp(randomFloat, probability) < 0;
 		var draws = _Utils_eq(randomFloat, probability);
-		var _v0 = A2($elm$core$Debug$log, 'home rating = ', homeRating);
-		var _v1 = A2($elm$core$Debug$log, 'away rating = ', awayRating);
-		var _v2 = A2($elm$core$Debug$log, 'rating diff = ', ratingDiff);
-		var _v3 = A2($elm$core$Debug$log, 'x = ', x);
-		var _v4 = A2($elm$core$Debug$log, 'y = ', y);
-		var _v5 = A2($elm$core$Debug$log, 'result of prob calc ', probability);
 		if (homeWins) {
 			return $author$project$API$HomeWin;
 		} else {
@@ -11376,13 +11403,14 @@ var $author$project$Main$getTeam = F2(
 var $author$project$Main$getTeamRating = function (team) {
 	return team.rating;
 };
+var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$playFixture = F3(
 	function (randomFloat, teams, fixture) {
 		var homeTeamRating = $author$project$Main$getTeamRating(
 			A2($author$project$Main$getTeam, fixture.homeTeam, teams));
 		var awayTeamRating = $author$project$Main$getTeamRating(
 			A2($author$project$Main$getTeam, fixture.awayTeam, teams));
-		var result = A3($author$project$Main$fixtureResult, homeTeamRating, awayTeamRating, randomFloat);
+		var result = A3($author$project$Main$getFixtureResult, homeTeamRating, awayTeamRating, randomFloat);
 		var _v0 = A2($elm$core$Debug$log, 'home team = ', fixture.homeTeam);
 		var _v1 = A2($elm$core$Debug$log, 'home team rating= ', homeTeamRating);
 		var _v2 = A2($elm$core$Debug$log, 'away team = ', fixture.awayTeam);
@@ -11391,15 +11419,21 @@ var $author$project$Main$playFixture = F3(
 			case 'HomeWin':
 				return _Utils_update(
 					fixture,
-					{result: 'HomeWin'});
+					{
+						result: $elm$core$Maybe$Just($author$project$API$HomeWin)
+					});
 			case 'Draw':
 				return _Utils_update(
 					fixture,
-					{result: 'Draw'});
+					{
+						result: $elm$core$Maybe$Just($author$project$API$Draw)
+					});
 			default:
 				return _Utils_update(
 					fixture,
-					{result: 'HomeLoss'});
+					{
+						result: $elm$core$Maybe$Just($author$project$API$HomeLoss)
+					});
 		}
 	});
 var $author$project$Main$playFixtures = F3(
@@ -11415,17 +11449,17 @@ var $author$project$Main$playGroupRound = F2(
 		var unplayedFixtures = A2($elm$core$List$filter, $author$project$Main$isUnplayedFixture, group.fixtures);
 		var round3Fixtures = A2(
 			$elm$core$List$filter,
-			$author$project$Main$isGroupRound('Round3'),
+			$author$project$Main$isGroupRound($author$project$API$Round3),
 			unplayedFixtures);
 		var round3Finished = $elm$core$List$isEmpty(round3Fixtures);
 		var round2Fixtures = A2(
 			$elm$core$List$filter,
-			$author$project$Main$isGroupRound('Round2'),
+			$author$project$Main$isGroupRound($author$project$API$Round2),
 			unplayedFixtures);
 		var round2Finished = $elm$core$List$isEmpty(round2Fixtures);
 		var round1Fixtures = A2(
 			$elm$core$List$filter,
-			$author$project$Main$isGroupRound('Round1'),
+			$author$project$Main$isGroupRound($author$project$API$Round1),
 			unplayedFixtures);
 		var round1Finished = $elm$core$List$isEmpty(round1Fixtures);
 		var playedFixtures = A2($elm$core$List$filter, $author$project$Main$isPlayedFixture, group.fixtures);
@@ -11886,21 +11920,27 @@ var $author$project$Main$teamRow = function (teamStats) {
 			]));
 };
 var $author$project$Main$isAwayWin = function (fixture) {
-	return fixture.result === 'HomeLoss';
+	return _Utils_eq(
+		fixture.result,
+		$elm$core$Maybe$Just($author$project$API$HomeLoss));
 };
 var $author$project$Main$getAwayWins = function (fixtures) {
 	return $elm$core$List$length(
 		A2($elm$core$List$filter, $author$project$Main$isAwayWin, fixtures));
 };
 var $author$project$Main$isDraw = function (fixture) {
-	return fixture.result === 'Draw';
+	return _Utils_eq(
+		fixture.result,
+		$elm$core$Maybe$Just($author$project$API$Draw));
 };
 var $author$project$Main$getDraws = function (fixtures) {
 	return $elm$core$List$length(
 		A2($elm$core$List$filter, $author$project$Main$isDraw, fixtures));
 };
 var $author$project$Main$isHomeWin = function (fixture) {
-	return fixture.result === 'HomeWin';
+	return _Utils_eq(
+		fixture.result,
+		$elm$core$Maybe$Just($author$project$API$HomeWin));
 };
 var $author$project$Main$getHomeWins = function (fixtures) {
 	return $elm$core$List$length(
@@ -12620,7 +12660,7 @@ var $author$project$Main$main = $elm$browser$Browser$element(
 		view: $author$project$Main$view
 	});
 _Platform_export({'Main':{'init':$author$project$Main$main(
-	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"API.Fixture":{"args":[],"type":"{ homeTeam : String.String, awayTeam : String.String, result : String.String, round : String.String }"},"API.Group":{"args":[],"type":"{ name : String.String, teams : List.List API.Team, fixtures : List.List API.Fixture }"},"API.Team":{"args":[],"type":"{ name : String.String, rating : Basics.Int }"}},"unions":{"Main.Msg":{"args":[],"tags":{"FetchGroups":[],"FetchGroupsResult":["Result.Result Http.Error (List.List API.Group)"],"GroupTabClick":["String.String"],"SimulateRound":[],"NewRandomNumber":["Basics.Float"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
+	$elm$json$Json$Decode$succeed(_Utils_Tuple0))({"versions":{"elm":"0.19.1"},"types":{"message":"Main.Msg","aliases":{"API.Fixture":{"args":[],"type":"{ homeTeam : String.String, awayTeam : String.String, result : Maybe.Maybe API.GameResult, round : API.Round }"},"API.Group":{"args":[],"type":"{ name : String.String, teams : List.List API.Team, fixtures : List.List API.Fixture }"},"API.Team":{"args":[],"type":"{ name : String.String, rating : Basics.Int }"}},"unions":{"Main.Msg":{"args":[],"tags":{"FetchGroups":[],"FetchGroupsResult":["Result.Result Http.Error (List.List API.Group)"],"GroupTabClick":["String.String"],"SimulateRound":[],"NewRandomNumber":["Basics.Float"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String.String"],"Timeout":[],"NetworkError":[],"BadStatus":["Basics.Int"],"BadBody":["String.String"]}},"Basics.Float":{"args":[],"tags":{"Float":[]}},"API.GameResult":{"args":[],"tags":{"HomeWin":[],"Draw":[],"HomeLoss":[]}},"Basics.Int":{"args":[],"tags":{"Int":[]}},"List.List":{"args":["a"],"tags":{}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"Result.Result":{"args":["error","value"],"tags":{"Ok":["value"],"Err":["error"]}},"API.Round":{"args":[],"tags":{"Round1":[],"Round2":[],"Round3":[],"QuarterFinal":[],"SemiFinal":[],"Final":[]}},"String.String":{"args":[],"tags":{"String":[]}}}}})}});}(this));
 
   var app = Elm.Main.init({ node: document.getElementById("elm") });
 }

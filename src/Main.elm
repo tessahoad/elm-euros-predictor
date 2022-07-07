@@ -209,7 +209,6 @@ getTeamStats fixtures team =
 
         losses =
             (List.length playedHomeFixtures + List.length playedAwayFixtures) - wins - draws
-
     in
     { name = team.name
     , wins = wins
@@ -221,12 +220,12 @@ getTeamStats fixtures team =
 
 isPlayedFixture : Fixture -> Bool
 isPlayedFixture fixture =
-    fixture.result /= "Unplayed"
+    fixture.result /= Nothing
 
 
 isUnplayedFixture : Fixture -> Bool
 isUnplayedFixture fixture =
-    fixture.result == "Unplayed"
+    fixture.result == Nothing
 
 
 isHomeFixture : String -> Fixture -> Bool
@@ -256,17 +255,17 @@ getDraws fixtures =
 
 isHomeWin : Fixture -> Bool
 isHomeWin fixture =
-    fixture.result == "HomeWin"
+    fixture.result == Just HomeWin
 
 
 isAwayWin : Fixture -> Bool
 isAwayWin fixture =
-    fixture.result == "HomeLoss"
+    fixture.result == Just HomeLoss
 
 
 isDraw : Fixture -> Bool
 isDraw fixture =
-    fixture.result == "Draw"
+    fixture.result == Just Draw
 
 
 teamRow : TeamStats -> TableRow Msg
@@ -328,21 +327,91 @@ getGroups =
         }
 
 
+getQuarterFinalFixtures : List Group -> List Fixture
+getQuarterFinalFixtures groups =
+    let
+        groupA =
+            getGroupByName "A" groups
 
---getQuarterFinalFixtures: List Group -> List Fixture
---getQuarterFinalFixtures groups =
---    let
---        quarterFinal1 =
---        quarterFinal2 =
---        quarterFinal3 =
---        quarterFinal4
---    in
---
---getGroupWinner: Group -> Team
---getGroupWinner group =
---
---getGroupRunnerUp: Group -> Team
---getGroupRunnerUp group =
+        groupB =
+            getGroupByName "B" groups
+
+        groupC =
+            getGroupByName "C" groups
+
+        groupD =
+            getGroupByName "D" groups
+
+        quarterFinal1 =
+            { homeTeam = getGroupWinner groupA, awayTeam = getGroupRunnerUp groupB, round = QuarterFinal, result = Nothing }
+
+        quarterFinal2 =
+            { homeTeam = getGroupWinner groupB, awayTeam = getGroupRunnerUp groupA, round = QuarterFinal, result = Nothing }
+
+        quarterFinal3 =
+            { homeTeam = getGroupWinner groupC, awayTeam = getGroupRunnerUp groupD, round = QuarterFinal, result = Nothing }
+
+        quarterFinal4 =
+            { homeTeam = getGroupWinner groupD, awayTeam = getGroupRunnerUp groupC, round = QuarterFinal, result = Nothing }
+    in
+    [ quarterFinal1, quarterFinal2, quarterFinal3, quarterFinal4 ]
+
+
+getGroupByName : String -> List Group -> Group
+getGroupByName name groups =
+    let
+        filteredGroups =
+            List.filter (groupNameMatch name) groups
+
+        maybeGroup =
+            List.head filteredGroups
+    in
+    case maybeGroup of
+        Just group ->
+            group
+
+        Nothing ->
+            { name = "", teams = [], fixtures = [] }
+
+
+getGroupWinner : Group -> String
+getGroupWinner group =
+    let
+        maybeWinner =
+            List.head (teamsOrderedByPoints group)
+    in
+    case maybeWinner of
+        Just winner ->
+            winner.name
+
+        Nothing ->
+            ""
+
+
+getGroupRunnerUp : Group -> String
+getGroupRunnerUp group =
+    let
+        maybeTeams =
+            List.tail (teamsOrderedByPoints group)
+
+        teams =
+            case maybeTeams of
+                Just justTeams ->
+                    justTeams
+
+                Nothing ->
+                    []
+
+        maybeRunnerUp =
+            List.head teams
+    in
+    case maybeRunnerUp of
+        Just runnerUp ->
+            runnerUp.name
+
+        Nothing ->
+            ""
+
 
 playRound : Model -> Model
 playRound model =
@@ -414,13 +483,13 @@ playGroupRound randomFloat group =
             List.filter isUnplayedFixture group.fixtures
 
         round1Fixtures =
-            List.filter (isGroupRound "Round1") unplayedFixtures
+            List.filter (isGroupRound Round1) unplayedFixtures
 
         round2Fixtures =
-            List.filter (isGroupRound "Round2") unplayedFixtures
+            List.filter (isGroupRound Round2) unplayedFixtures
 
         round3Fixtures =
-            List.filter (isGroupRound "Round3") unplayedFixtures
+            List.filter (isGroupRound Round3) unplayedFixtures
 
         round1Finished =
             List.isEmpty round1Fixtures
@@ -483,30 +552,18 @@ playFixture randomFloat teams fixture =
         awayTeamRating =
             getTeamRating (getTeam fixture.awayTeam teams)
 
-        _ =
-            Debug.log "home team = " fixture.homeTeam
-
-        _ =
-            Debug.log "home team rating= " homeTeamRating
-
-        _ =
-            Debug.log "away team = " fixture.awayTeam
-
-        _ =
-            Debug.log "away team rating= " awayTeamRating
-
         result =
             getFixtureResult homeTeamRating awayTeamRating randomFloat
     in
     case result of
         HomeWin ->
-            { fixture | result = "HomeWin" }
+            { fixture | result = Just HomeWin }
 
         Draw ->
-            { fixture | result = "Draw" }
+            { fixture | result = Just Draw }
 
         HomeLoss ->
-            { fixture | result = "HomeLoss" }
+            { fixture | result = Just HomeLoss }
 
 
 getFixtureResult : Int -> Int -> Float -> GameResult
@@ -516,7 +573,7 @@ getFixtureResult homeRating awayRating randomFloat =
             awayRating - homeRating
 
         x =
-            (toFloat ratingDiff) / 400
+            toFloat ratingDiff / 400
 
         y =
             (10 ^ x) + 1
@@ -569,7 +626,7 @@ teamNameMatch name team =
     name == team.name
 
 
-isGroupRound : String -> Fixture -> Bool
+isGroupRound : Round -> Fixture -> Bool
 isGroupRound round fixture =
     round == fixture.round
 

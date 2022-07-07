@@ -34,8 +34,8 @@ type alias Group =
 type alias Fixture =
     { homeTeam : String
     , awayTeam : String
-    , result : String
-    , round : String
+    , result : Maybe GameResult
+    , round : Round
     }
 
 
@@ -71,13 +71,53 @@ decodeTeams =
     Decode.list decodeTeam
 
 
+decodeGameResult : Decoder (Maybe GameResult)
+decodeGameResult =
+    Decode.string
+        |> Decode.andThen
+            (\resultString ->
+                case resultString of
+                    "HomeWin" ->
+                        Decode.succeed (Just HomeWin)
+
+                    "Draw" ->
+                        Decode.succeed (Just Draw)
+
+                    "HomeLoss" ->
+                        Decode.succeed (Just HomeLoss)
+
+                    _ ->
+                        Decode.succeed Nothing
+            )
+
+
+decodeRound : Decoder Round
+decodeRound =
+    Decode.string
+        |> Decode.andThen
+            (\roundString ->
+                case roundString of
+                    "Round1" ->
+                        Decode.succeed Round1
+
+                    "Round2" ->
+                        Decode.succeed Round2
+
+                    "Round3" ->
+                        Decode.succeed Round3
+
+                    _ ->
+                        Decode.fail roundString
+            )
+
+
 decodeFixture : Decoder Fixture
 decodeFixture =
     Decode.succeed Fixture
         |> required "homeTeam" Decode.string
         |> required "awayTeam" Decode.string
-        |> optional "result" Decode.string "Unplayed"
-        |> required "round" Decode.string
+        |> optional "result" decodeGameResult Nothing
+        |> required "round" decodeRound
 
 
 decodeFixtures : Decoder (List Fixture)
