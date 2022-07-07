@@ -20,7 +20,7 @@ type alias TeamStats =
     , wins : Int
     , losses : Int
     , draws : Int
-    , position : Int
+    , points : Int
     }
 
 
@@ -40,15 +40,14 @@ type alias Fixture =
 
 
 type alias FixtureResult =
-    { result : Result
+    { result : GameResult
     }
 
 
-type Result
+type GameResult
     = HomeWin
     | Draw
     | HomeLoss
-    | Unplayed
 
 
 type Round

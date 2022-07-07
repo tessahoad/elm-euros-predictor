@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import API exposing (Fixture, Group, Team, TeamStats, decodeGroups, decodeTeams, serverEndpoint)
+import API exposing (Fixture, GameResult(..), Group, Round(..), Team, TeamStats, decodeGroups, decodeTeams, serverEndpoint)
 import Browser
 import Bulma.CDN exposing (..)
 import Bulma.Components exposing (..)
@@ -29,7 +29,7 @@ type alias Model =
     , errorMessage : Maybe String
     , activeGroupTab : String
     , randomFloat : Float
-    , lastPlayedRound : String
+    , lastPlayedRound : Maybe Round
     }
 
 
@@ -44,7 +44,7 @@ init _ =
             , groups = []
             , activeGroupTab = "A"
             , randomFloat = 0.5
-            , lastPlayedRound = ""
+            , lastPlayedRound = Nothing
             }
     in
     ( model, Cmd.batch [ getGroups, Random.generate NewRandomNumber (Random.float 0 1) ] )
@@ -54,13 +54,6 @@ init _ =
 -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        _ =
-            Debug.log "Message: " (toString msg)
-
-        _ =
-            Debug.log "State: " (toString model)
-    in
     case msg of
         FetchGroups ->
             ( model, getGroups )
@@ -121,8 +114,7 @@ view model =
                             []
                             [ tileChild Auto
                                 []
-                                [
-                                --[ button myButtonModifiers [] [ text "It's Coming Home" ]
+                                [--[ button myButtonModifiers [] [ text "It's Coming Home" ]
                                 ]
                             , tileChild Auto
                                 []
@@ -181,10 +173,15 @@ groupsContentTableBody model =
     in
     case activeGroup of
         Just group ->
-            tableBody [] (List.map teamRow (listTeamStats group))
+            tableBody [] (List.map teamRow (teamsOrderedByPoints group))
 
         Nothing ->
             tableRow False [] []
+
+
+teamsOrderedByPoints : Group -> List TeamStats
+teamsOrderedByPoints group =
+    List.reverse (List.sortBy .points (listTeamStats group))
 
 
 listTeamStats : Group -> List TeamStats
@@ -208,16 +205,17 @@ getTeamStats fixtures team =
             getHomeWins playedHomeFixtures + getAwayWins playedAwayFixtures
 
         draws =
-            getDraws playedHomeFixtures + getAwayWins playedAwayFixtures
+            getDraws playedHomeFixtures + getDraws playedAwayFixtures
 
         losses =
             (List.length playedHomeFixtures + List.length playedAwayFixtures) - wins - draws
+
     in
     { name = team.name
     , wins = wins
     , draws = draws
     , losses = losses
-    , position = 0
+    , points = getPoints wins draws
     }
 
 
@@ -275,13 +273,13 @@ teamRow : TeamStats -> TableRow Msg
 teamRow teamStats =
     tableRow False
         []
-        [ tableCell [] [ text (String.fromInt teamStats.position) ]
+        [ tableCell [] [ text (String.fromInt 0) ]
         , tableCell [] [ text teamStats.name ]
         , tableCell [] [ text (String.fromInt (getPlayed teamStats.wins teamStats.draws teamStats.losses)) ]
         , tableCell [] [ text (String.fromInt teamStats.wins) ]
         , tableCell [] [ text (String.fromInt teamStats.draws) ]
         , tableCell [] [ text (String.fromInt teamStats.losses) ]
-        , tableCell [] [ text (String.fromInt (getPoints teamStats.wins teamStats.draws)) ]
+        , tableCell [] [ text (String.fromInt teamStats.points) ]
         ]
 
 
@@ -329,15 +327,75 @@ getGroups =
         , expect = Http.expectJson FetchGroupsResult decodeGroups
         }
 
-getQuarterFinalFixtures: List Group -> List Fixture
-getQuarterFinalFixtures groups =
 
 
+--getQuarterFinalFixtures: List Group -> List Fixture
+--getQuarterFinalFixtures groups =
+--    let
+--        quarterFinal1 =
+--        quarterFinal2 =
+--        quarterFinal3 =
+--        quarterFinal4
+--    in
+--
+--getGroupWinner: Group -> Team
+--getGroupWinner group =
+--
+--getGroupRunnerUp: Group -> Team
+--getGroupRunnerUp group =
 
 playRound : Model -> Model
 playRound model =
+    let
+        updatedGroups =
+            case model.lastPlayedRound of
+                Nothing ->
+                    playGroupsRound model.groups model.randomFloat
+
+                Just Round1 ->
+                    playGroupsRound model.groups model.randomFloat
+
+                Just Round2 ->
+                    playGroupsRound model.groups model.randomFloat
+
+                Just Round3 ->
+                    playGroupsRound model.groups model.randomFloat
+
+                Just QuarterFinal ->
+                    playGroupsRound model.groups model.randomFloat
+
+                Just SemiFinal ->
+                    playGroupsRound model.groups model.randomFloat
+
+                Just Final ->
+                    playGroupsRound model.groups model.randomFloat
+
+        justPlayedRound =
+            case model.lastPlayedRound of
+                Nothing ->
+                    Just Round1
+
+                Just Round1 ->
+                    Just Round2
+
+                Just Round2 ->
+                    Just Round3
+
+                Just Round3 ->
+                    Just QuarterFinal
+
+                Just QuarterFinal ->
+                    Just SemiFinal
+
+                Just SemiFinal ->
+                    Just Final
+
+                Just Final ->
+                    Nothing
+    in
     { model
-        | groups = playGroupsRound model.groups model.randomFloat
+        | groups = updatedGroups
+        , lastPlayedRound = justPlayedRound
     }
 
 
@@ -423,10 +481,48 @@ playFixture randomFloat teams fixture =
             getTeamRating (getTeam fixture.homeTeam teams)
 
         awayTeamRating =
-            getTeamRating (getTeam fixture.homeTeam teams)
+            getTeamRating (getTeam fixture.awayTeam teams)
+
+        _ =
+            Debug.log "home team = " fixture.homeTeam
+
+        _ =
+            Debug.log "home team rating= " homeTeamRating
+
+        _ =
+            Debug.log "away team = " fixture.awayTeam
+
+        _ =
+            Debug.log "away team rating= " awayTeamRating
+
+        result =
+            getFixtureResult homeTeamRating awayTeamRating randomFloat
+    in
+    case result of
+        HomeWin ->
+            { fixture | result = "HomeWin" }
+
+        Draw ->
+            { fixture | result = "Draw" }
+
+        HomeLoss ->
+            { fixture | result = "HomeLoss" }
+
+
+getFixtureResult : Int -> Int -> Float -> GameResult
+getFixtureResult homeRating awayRating randomFloat =
+    let
+        ratingDiff =
+            awayRating - homeRating
+
+        x =
+            (toFloat ratingDiff) / 400
+
+        y =
+            (10 ^ x) + 1
 
         probability =
-            probabilityHomeBeatsAway homeTeamRating awayTeamRating
+            1 / y
 
         homeWins =
             randomFloat < probability
@@ -436,29 +532,14 @@ playFixture randomFloat teams fixture =
     in
     case homeWins of
         True ->
-            { fixture | result = "HomeWin" }
+            HomeWin
 
         False ->
             if draws then
-                { fixture | result = "Draw" }
+                Draw
 
             else
-                { fixture | result = "HomeLoss" }
-
-
-probabilityHomeBeatsAway : Int -> Int -> Float
-probabilityHomeBeatsAway home away =
-    let
-        ratingDiff =
-            away - home
-
-        x =
-            toFloat ratingDiff / 400
-
-        y =
-            (x ^ 10) + 1
-    in
-    1 / y
+                HomeLoss
 
 
 getTeamRating : Team -> Int
