@@ -20,7 +20,6 @@ type Msg
     | FetchGroupsResult (Result Http.Error (List Group))
     | GroupTabClick String
     | SimulateRound
-    | GenerateRandomNumber
     | NewRandomNumber Float
 
 
@@ -48,7 +47,7 @@ init _ =
             , lastPlayedRound = ""
             }
     in
-    ( model, Cmd.batch [ getGroups ] )
+    ( model, Cmd.batch [ getGroups, Random.generate NewRandomNumber (Random.float 0 1) ] )
 
 
 {-| This is the update function that mutates the state of the system
@@ -73,10 +72,7 @@ update msg model =
             ( { model | activeGroupTab = groupName }, Cmd.none )
 
         SimulateRound ->
-            ( playRound model, Cmd.none )
-
-        GenerateRandomNumber ->
-            ( model, Random.generate NewRandomNumber (Random.float 0 1) )
+            ( playRound model, Random.generate NewRandomNumber (Random.float 0 1) )
 
         NewRandomNumber number ->
             ( { model | randomFloat = number }, Cmd.none )
@@ -118,14 +114,15 @@ view model =
                                 ]
                             , tileChild Auto
                                 []
-                                [ button myButtonModifiers [ onClick SimulateRound ] [ text "Simulate Tournament" ]
+                                [ button myButtonModifiers [] [ text "Simulate Tournament" ]
                                 ]
                             ]
                         , tileParent Auto
                             []
                             [ tileChild Auto
                                 []
-                                [ button myButtonModifiers [] [ text "It's Coming Home" ]
+                                [
+                                --[ button myButtonModifiers [] [ text "It's Coming Home" ]
                                 ]
                             , tileChild Auto
                                 []
@@ -189,19 +186,32 @@ groupsContentTableBody model =
         Nothing ->
             tableRow False [] []
 
-listTeamStats: Group -> List TeamStats
-listTeamStats group =
-    (List.map (getTeamStats group.fixtures) group.teams)
 
-getTeamStats: List Fixture -> Team -> TeamStats
+listTeamStats : Group -> List TeamStats
+listTeamStats group =
+    List.map (getTeamStats group.fixtures) group.teams
+
+
+getTeamStats : List Fixture -> Team -> TeamStats
 getTeamStats fixtures team =
     let
-        playedFixtures = List.filter isPlayedFixture fixtures
-        playedHomeFixtures = List.filter (isHomeFixture team.name) playedFixtures
-        playedAwayFixtures = List.filter (isAwayFixture team.name) playedFixtures
-        wins = getHomeWins playedHomeFixtures + getAwayWins playedAwayFixtures
-        draws = getDraws playedHomeFixtures + getAwayWins playedAwayFixtures
-        losses = (List.length playedHomeFixtures + List.length playedAwayFixtures) - wins - draws
+        playedFixtures =
+            List.filter isPlayedFixture fixtures
+
+        playedHomeFixtures =
+            List.filter (isHomeFixture team.name) playedFixtures
+
+        playedAwayFixtures =
+            List.filter (isAwayFixture team.name) playedFixtures
+
+        wins =
+            getHomeWins playedHomeFixtures + getAwayWins playedAwayFixtures
+
+        draws =
+            getDraws playedHomeFixtures + getAwayWins playedAwayFixtures
+
+        losses =
+            (List.length playedHomeFixtures + List.length playedAwayFixtures) - wins - draws
     in
     { name = team.name
     , wins = wins
@@ -210,70 +220,86 @@ getTeamStats fixtures team =
     , position = 0
     }
 
-isPlayedFixture: Fixture -> Bool
+
+isPlayedFixture : Fixture -> Bool
 isPlayedFixture fixture =
     fixture.result /= "Unplayed"
 
-isUnplayedFixture: Fixture -> Bool
+
+isUnplayedFixture : Fixture -> Bool
 isUnplayedFixture fixture =
     fixture.result == "Unplayed"
 
-isHomeFixture: String -> Fixture -> Bool
+
+isHomeFixture : String -> Fixture -> Bool
 isHomeFixture teamName fixture =
     fixture.homeTeam == teamName
 
-isAwayFixture: String -> Fixture -> Bool
+
+isAwayFixture : String -> Fixture -> Bool
 isAwayFixture teamName fixture =
     fixture.awayTeam == teamName
 
-getHomeWins: List Fixture -> Int
+
+getHomeWins : List Fixture -> Int
 getHomeWins fixtures =
     List.length (List.filter isHomeWin fixtures)
 
-getAwayWins: List Fixture -> Int
+
+getAwayWins : List Fixture -> Int
 getAwayWins fixtures =
     List.length (List.filter isAwayWin fixtures)
 
-getDraws: List Fixture -> Int
+
+getDraws : List Fixture -> Int
 getDraws fixtures =
     List.length (List.filter isDraw fixtures)
 
-isHomeWin: Fixture -> Bool
+
+isHomeWin : Fixture -> Bool
 isHomeWin fixture =
     fixture.result == "HomeWin"
 
-isAwayWin: Fixture -> Bool
+
+isAwayWin : Fixture -> Bool
 isAwayWin fixture =
     fixture.result == "HomeLoss"
 
-isDraw: Fixture -> Bool
+
+isDraw : Fixture -> Bool
 isDraw fixture =
     fixture.result == "Draw"
+
 
 teamRow : TeamStats -> TableRow Msg
 teamRow teamStats =
     tableRow False
         []
-        [ tableCell [] [text (String.fromInt teamStats.position)]
+        [ tableCell [] [ text (String.fromInt teamStats.position) ]
         , tableCell [] [ text teamStats.name ]
-        , tableCell [] [text (String.fromInt (getPlayed teamStats.wins teamStats.draws teamStats.losses))]
-        , tableCell [] [text (String.fromInt teamStats.wins)]
-        , tableCell [] [text (String.fromInt teamStats.draws)]
-        , tableCell [] [text (String.fromInt teamStats.losses)]
-        , tableCell [] [text (String.fromInt (getPoints teamStats.wins teamStats.draws)) ]
+        , tableCell [] [ text (String.fromInt (getPlayed teamStats.wins teamStats.draws teamStats.losses)) ]
+        , tableCell [] [ text (String.fromInt teamStats.wins) ]
+        , tableCell [] [ text (String.fromInt teamStats.draws) ]
+        , tableCell [] [ text (String.fromInt teamStats.losses) ]
+        , tableCell [] [ text (String.fromInt (getPoints teamStats.wins teamStats.draws)) ]
         ]
 
-getPoints: Int -> Int -> Int
+
+getPoints : Int -> Int -> Int
 getPoints wins draws =
     (wins * 3) + draws
 
-getPlayed: Int -> Int -> Int -> Int
+
+getPlayed : Int -> Int -> Int -> Int
 getPlayed wins draws losses =
     wins + draws + losses
+
 
 groupNameMatch : String -> Group -> Bool
 groupNameMatch name group =
     name == group.name
+
+
 
 -- Main
 
@@ -303,92 +329,169 @@ getGroups =
         , expect = Http.expectJson FetchGroupsResult decodeGroups
         }
 
+getQuarterFinalFixtures: List Group -> List Fixture
+getQuarterFinalFixtures groups =
+
+
+
 playRound : Model -> Model
 playRound model =
-    { model |
-        groups = playGroupsRound model.groups model.randomFloat
+    { model
+        | groups = playGroupsRound model.groups model.randomFloat
     }
 
-playGroupsRound: List Group -> Float -> List Group
+
+playGroupsRound : List Group -> Float -> List Group
 playGroupsRound groups randomFloat =
     List.map (playGroupRound randomFloat) groups
 
-playGroupRound: Float -> Group -> Group
+
+playGroupRound : Float -> Group -> Group
 playGroupRound randomFloat group =
     let
-        unplayedFixtures = List.filter isUnplayedFixture group.fixtures
-        round1Fixtures = List.filter (isGroupRound "Round1") unplayedFixtures
-        round2Fixtures = List.filter (isGroupRound "Round2") unplayedFixtures
-        round3Fixtures = List.filter (isGroupRound "Round3") unplayedFixtures
-        round1Finished = List.isEmpty round1Fixtures
-        round2Finished = List.isEmpty round2Fixtures
-        round3Finished = List.isEmpty round3Fixtures
+        playedFixtures =
+            List.filter isPlayedFixture group.fixtures
+
+        unplayedFixtures =
+            List.filter isUnplayedFixture group.fixtures
+
+        round1Fixtures =
+            List.filter (isGroupRound "Round1") unplayedFixtures
+
+        round2Fixtures =
+            List.filter (isGroupRound "Round2") unplayedFixtures
+
+        round3Fixtures =
+            List.filter (isGroupRound "Round3") unplayedFixtures
+
+        round1Finished =
+            List.isEmpty round1Fixtures
+
+        round2Finished =
+            List.isEmpty round2Fixtures
+
+        round3Finished =
+            List.isEmpty round3Fixtures
     in
-    if (not round1Finished) then
+    if not round1Finished then
         let
-            result = playFixtures randomFloat round1Fixtures group.teams
-        in { group | fixtures = Tuple.first (result), teams = Tuple.second (result) }
-    else if (not round2Finished) then
+            result =
+                playFixtures randomFloat round1Fixtures group.teams
+
+            updatedFixtures =
+                Tuple.first result ++ round2Fixtures ++ round3Fixtures ++ playedFixtures
+        in
+        { group | fixtures = updatedFixtures, teams = Tuple.second result }
+
+    else if not round2Finished then
         let
-            result = playFixtures randomFloat round2Fixtures group.teams
-        in { group | fixtures = Tuple.first (result), teams = Tuple.second (result) }
-    else if (not round3Finished) then
+            result =
+                playFixtures randomFloat round2Fixtures group.teams
+
+            updatedFixtures =
+                Tuple.first result ++ round3Fixtures ++ playedFixtures
+        in
+        { group | fixtures = updatedFixtures, teams = Tuple.second result }
+
+    else if not round3Finished then
         let
-            result = playFixtures  randomFloat round3Fixtures group.teams
-        in { group | fixtures = Tuple.first (result), teams = Tuple.second (result) }
+            result =
+                playFixtures randomFloat round3Fixtures group.teams
+
+            updatedFixtures =
+                Tuple.first result ++ playedFixtures
+        in
+        { group | fixtures = updatedFixtures, teams = Tuple.second result }
+
     else
         group
 
-playFixtures: Float -> List Fixture -> List Team -> (List Fixture, List Team)
+
+playFixtures : Float -> List Fixture -> List Team -> ( List Fixture, List Team )
 playFixtures randomFloat fixtures teams =
     let
-        result = List.map (playFixture randomFloat teams) fixtures
+        updatedFixtures =
+            List.map (playFixture randomFloat teams) fixtures
     in
-    (result, teams)
+    ( updatedFixtures, teams )
 
-playFixture: Float -> List Team -> Fixture -> Fixture
+
+playFixture : Float -> List Team -> Fixture -> Fixture
 playFixture randomFloat teams fixture =
     let
-        homeTeamRating = getTeamRating (getTeam fixture.homeTeam teams)
-        awayTeamRating = getTeamRating (getTeam fixture.homeTeam teams)
-        probability = probabilityHomeBeatsAway homeTeamRating awayTeamRating
-        homeWins = randomFloat < probability
-        draws = randomFloat == probability
+        homeTeamRating =
+            getTeamRating (getTeam fixture.homeTeam teams)
+
+        awayTeamRating =
+            getTeamRating (getTeam fixture.homeTeam teams)
+
+        probability =
+            probabilityHomeBeatsAway homeTeamRating awayTeamRating
+
+        homeWins =
+            randomFloat < probability
+
+        draws =
+            randomFloat == probability
     in
     case homeWins of
-        True -> { fixture | result = "HomeWin"}
-        False -> if (draws) then { fixture | result = "Draw"} else { fixture | result = "HomeLoss"}
+        True ->
+            { fixture | result = "HomeWin" }
 
-probabilityHomeBeatsAway: Int -> Int -> Float
+        False ->
+            if draws then
+                { fixture | result = "Draw" }
+
+            else
+                { fixture | result = "HomeLoss" }
+
+
+probabilityHomeBeatsAway : Int -> Int -> Float
 probabilityHomeBeatsAway home away =
     let
-        ratingDiff = away - home
-        x = toFloat ratingDiff / 400
-        y = (x ^ 10) + 1
-    in
-    (1 / y)
+        ratingDiff =
+            away - home
 
-getTeamRating: Team -> Int
+        x =
+            toFloat ratingDiff / 400
+
+        y =
+            (x ^ 10) + 1
+    in
+    1 / y
+
+
+getTeamRating : Team -> Int
 getTeamRating team =
     team.rating
 
-getTeam: String -> List Team -> Team
+
+getTeam : String -> List Team -> Team
 getTeam name teams =
     let
-      filteredTeams = List.filter (teamNameMatch name) teams
-      maybeTeam = List.head filteredTeams
+        filteredTeams =
+            List.filter (teamNameMatch name) teams
+
+        maybeTeam =
+            List.head filteredTeams
     in
     case maybeTeam of
-        Just team -> team
-        Nothing -> { name = "", rating = 0 }
+        Just team ->
+            team
 
-teamNameMatch: String -> Team -> Bool
+        Nothing ->
+            { name = "", rating = 0 }
+
+
+teamNameMatch : String -> Team -> Bool
 teamNameMatch name team =
     name == team.name
 
-isGroupRound: String -> Fixture -> Bool
+
+isGroupRound : String -> Fixture -> Bool
 isGroupRound round fixture =
     round == fixture.round
+
 
 myButtonModifiers : ButtonModifiers msg
 myButtonModifiers =
@@ -410,6 +513,7 @@ myTabsModifiers =
     { tabsModifiers
         | style = Toggle
     }
+
 
 myTableModifiers : TableModifiers
 myTableModifiers =
