@@ -1,0 +1,214 @@
+[
+  {
+    "name": "A",
+    "teams": [
+      {
+        "name": "England",
+        "rating": 1692
+      },
+      {
+        "name": "Austria",
+        "rating": 1380
+      },
+      {
+        "name": "Norway",
+        "rating": 1537
+      },
+      {
+        "name": "Northern Ireland",
+        "rating": 980
+      }
+    ],
+    "fixtures": [
+      {
+        "homeTeam": "England",
+        "awayTeam": "Austria",
+        "round": "Round1"
+      },
+      {
+        "homeTeam": "Norway",
+        "awayTeam": "Northern Ireland",
+        "round": "Round1"
+      },
+      {
+        "homeTeam": "England",
+        "awayTeam": "Norway",
+        "round": "Round2"
+      },
+      {
+        "homeTeam": "Austria",
+        "awayTeam": "Northern Ireland",
+        "round": "Round2"
+      },
+      {
+        "homeTeam": "Northern Ireland",
+        "awayTeam": "England",
+        "round": "Round3"
+      },
+      {
+        "homeTeam": "Austria",
+        "awayTeam": "Norway",
+        "round": "Round3"
+      }
+    ]
+  },
+  {
+    "name": "B",
+    "teams": [
+      {
+        "name": "Germany",
+        "rating": 1775
+      },
+      {
+        "name": "Denmark",
+        "rating": 1503
+      },
+      {
+        "name": "Spain",
+        "rating": 1668
+      },
+      {
+        "name": "Finland",
+        "rating": 1210
+      }
+    ],
+    "fixtures": [
+      {
+        "homeTeam": "Spain",
+        "awayTeam": "Finland",
+        "round": "Round1"
+      },
+      {
+        "homeTeam": "Germany",
+        "awayTeam": "Denmark",
+        "round": "Round1"
+      },
+      {
+        "homeTeam": "Denmark",
+        "awayTeam": "Finland",
+        "round": "Round2"
+      },
+      {
+        "homeTeam": "Germany",
+        "awayTeam": "Spain",
+        "round": "Round2"
+      },
+      {
+        "homeTeam": "Finland",
+        "awayTeam": "Germany",
+        "round": "Round3"
+      },
+      {
+        "homeTeam": "Denmark",
+        "awayTeam": "Spain",
+        "round": "Round3"
+      }
+    ]
+  },
+  {
+    "name": "C",
+    "teams": [
+      {
+        "name": "Netherlands",
+        "rating": 1726
+      },
+      {
+        "name": "Sweden",
+        "rating": 1801
+      },
+      {
+        "name": "Switzerland",
+        "rating": 1327
+      },
+      {
+        "name": "Portugal",
+        "rating": 1248
+      }
+    ],
+    "fixtures": [
+      {
+        "homeTeam": "Portugal",
+        "awayTeam": "Switzerland",
+        "round": "Round1"
+      },
+      {
+        "homeTeam": "Netherlands",
+        "awayTeam": "Sweden",
+        "round": "Round1"
+      },
+      {
+        "homeTeam": "Sweden",
+        "awayTeam": "Switzerland",
+        "round": "Round2"
+      },
+      {
+        "homeTeam": "Netherlands",
+        "awayTeam": "Portugal",
+        "round": "Round2"
+      },
+      {
+        "homeTeam": "Switzerland",
+        "awayTeam": "Netherlands",
+        "round": "Round3"
+      },
+      {
+        "homeTeam": "Sweden",
+        "awayTeam": "Portugal",
+        "round": "Round3"
+      }
+    ]
+  },
+  {
+    "name": "D",
+    "teams": [
+      {
+        "name": "France",
+        "rating": 1832
+      },
+      {
+        "name": "Italy",
+        "rating": 1582
+      },
+      {
+        "name": "Belgium",
+        "rating": 1372
+      },
+      {
+        "name": "Iceland",
+        "rating": 1476
+      }
+    ],
+    "fixtures": [
+      {
+        "homeTeam": "Belgium",
+        "awayTeam": "Iceland",
+        "round": "Round1"
+      },
+      {
+        "homeTeam": "France",
+        "awayTeam": "Italy",
+        "round": "Round1"
+      },
+      {
+        "homeTeam": "Italy",
+        "awayTeam": "Iceland",
+        "round": "Round2"
+      },
+      {
+        "homeTeam": "France",
+        "awayTeam": "Belgium",
+        "round": "Round2"
+      },
+      {
+        "homeTeam": "Iceland",
+        "awayTeam": "France",
+        "round": "Round3"
+      },
+      {
+        "homeTeam": "Italy",
+        "awayTeam": "Belgium",
+        "round": "Round3"
+      }
+    ]
+  }
+]
