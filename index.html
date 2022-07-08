@@ -11403,7 +11403,6 @@ var $author$project$Main$getTeam = F2(
 var $author$project$Main$getTeamRating = function (team) {
 	return team.rating;
 };
-var $elm$core$Debug$log = _Debug_log;
 var $author$project$Main$playFixture = F3(
 	function (randomFloat, teams, fixture) {
 		var homeTeamRating = $author$project$Main$getTeamRating(
@@ -11411,10 +11410,6 @@ var $author$project$Main$playFixture = F3(
 		var awayTeamRating = $author$project$Main$getTeamRating(
 			A2($author$project$Main$getTeam, fixture.awayTeam, teams));
 		var result = A3($author$project$Main$getFixtureResult, homeTeamRating, awayTeamRating, randomFloat);
-		var _v0 = A2($elm$core$Debug$log, 'home team = ', fixture.homeTeam);
-		var _v1 = A2($elm$core$Debug$log, 'home team rating= ', homeTeamRating);
-		var _v2 = A2($elm$core$Debug$log, 'away team = ', fixture.awayTeam);
-		var _v3 = A2($elm$core$Debug$log, 'away team rating= ', awayTeamRating);
 		switch (result.$) {
 			case 'HomeWin':
 				return _Utils_update(
@@ -11829,9 +11824,54 @@ var $surprisetalk$elm_bulma$Bulma$Elements$button = F3(
 			attrs,
 			htmls_);
 	});
+var $surprisetalk$elm_bulma$Bulma$Classes$levelItem = $elm$html$Html$Attributes$class('level-item');
+var $surprisetalk$elm_bulma$Bulma$Layout$levelItem = A2(
+	$surprisetalk$elm_bulma$Helpers$node,
+	'div',
+	_List_fromArray(
+		[$surprisetalk$elm_bulma$Bulma$Classes$levelItem]));
+var $surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading = F3(
+	function (attrs, heading, title) {
+		return A2(
+			$surprisetalk$elm_bulma$Bulma$Layout$levelItem,
+			attrs,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_Nil,
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('heading')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(heading)
+								])),
+							A2(
+							$elm$html$Html$p,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('title')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(title)
+								]))
+						]))
+				]));
+	});
 var $author$project$Main$groupNameMatch = F2(
 	function (name, group) {
 		return _Utils_eq(name, group.name);
+	});
+var $elm$core$Tuple$pair = F2(
+	function (a, b) {
+		return _Utils_Tuple2(a, b);
 	});
 var $surprisetalk$elm_bulma$Bulma$Elements$tableBody = A2($surprisetalk$elm_bulma$Helpers$node, 'tbody', _List_Nil);
 var $surprisetalk$elm_bulma$Bulma$Elements$tableRow = function (highlighted) {
@@ -11854,7 +11894,9 @@ var $author$project$Main$getPlayed = F3(
 		return (wins + draws) + losses;
 	});
 var $surprisetalk$elm_bulma$Bulma$Elements$tableCell = A2($surprisetalk$elm_bulma$Helpers$node, 'td', _List_Nil);
-var $author$project$Main$teamRow = function (teamStats) {
+var $author$project$Main$teamRow = function (_v0) {
+	var position = _v0.a;
+	var teamStats = _v0.b;
 	return A3(
 		$surprisetalk$elm_bulma$Bulma$Elements$tableRow,
 		false,
@@ -11867,7 +11909,7 @@ var $author$project$Main$teamRow = function (teamStats) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text(
-						$elm$core$String$fromInt(0))
+						$elm$core$String$fromInt(position + 1))
 					])),
 				A2(
 				$surprisetalk$elm_bulma$Bulma$Elements$tableCell,
@@ -12004,13 +12046,12 @@ var $author$project$Main$groupsContentTableBody = function (model) {
 			model.groups));
 	if (activeGroup.$ === 'Just') {
 		var group = activeGroup.a;
+		var groupTeamsByPoints = $author$project$Main$teamsOrderedByPoints(group);
+		var teamsWithPositions = A2($elm$core$List$indexedMap, $elm$core$Tuple$pair, groupTeamsByPoints);
 		return A2(
 			$surprisetalk$elm_bulma$Bulma$Elements$tableBody,
 			_List_Nil,
-			A2(
-				$elm$core$List$map,
-				$author$project$Main$teamRow,
-				$author$project$Main$teamsOrderedByPoints(group)));
+			A2($elm$core$List$map, $author$project$Main$teamRow, teamsWithPositions));
 	} else {
 		return A3($surprisetalk$elm_bulma$Bulma$Elements$tableRow, false, _List_Nil, _List_Nil);
 	}
@@ -12286,6 +12327,17 @@ var $author$project$Main$groupsTabs = function (model) {
 			$author$project$Main$groupTab(model.activeGroupTab),
 			model.groups));
 };
+var $surprisetalk$elm_bulma$Bulma$Classes$level = $elm$html$Html$Attributes$class('level');
+var $surprisetalk$elm_bulma$Bulma$Layout$level = A2(
+	$surprisetalk$elm_bulma$Helpers$node,
+	'nav',
+	_List_fromArray(
+		[$surprisetalk$elm_bulma$Bulma$Classes$level]));
+var $surprisetalk$elm_bulma$Bulma$Layout$levelItemText = A2(
+	$surprisetalk$elm_bulma$Helpers$node,
+	'p',
+	_List_fromArray(
+		[$surprisetalk$elm_bulma$Bulma$Classes$levelItem]));
 var $elm$html$Html$main_ = _VirtualDom_node('main');
 var $surprisetalk$elm_bulma$Bulma$Modifiers$Primary = {$: 'Primary'};
 var $surprisetalk$elm_bulma$Bulma$Modifiers$Blur = {$: 'Blur'};
@@ -12504,6 +12556,44 @@ var $surprisetalk$elm_bulma$Bulma$Layout$tileParent = function (width) {
 			]));
 };
 var $surprisetalk$elm_bulma$Bulma$Classes$isVertical = $elm$html$Html$Attributes$class('is-vertical');
+var $surprisetalk$elm_bulma$Bulma$Layout$verticalTile = function (width) {
+	return A2(
+		$surprisetalk$elm_bulma$Helpers$node,
+		'div',
+		_List_fromArray(
+			[
+				$surprisetalk$elm_bulma$Bulma$Classes$tile,
+				$surprisetalk$elm_bulma$Bulma$Classes$isVertical,
+				function () {
+				switch (width.$) {
+					case 'Auto':
+						return $surprisetalk$elm_bulma$Bulma$Classes$none;
+					case 'Width1':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is1;
+					case 'Width2':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is2;
+					case 'Width3':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is3;
+					case 'Width4':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is4;
+					case 'Width5':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is5;
+					case 'Width6':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is6;
+					case 'Width7':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is7;
+					case 'Width8':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is8;
+					case 'Width9':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is9;
+					case 'Width10':
+						return $surprisetalk$elm_bulma$Bulma$Classes$is10;
+					default:
+						return $surprisetalk$elm_bulma$Bulma$Classes$is11;
+				}
+			}()
+			]));
+};
 var $surprisetalk$elm_bulma$Bulma$Layout$verticalTileParent = function (width) {
 	return A2(
 		$surprisetalk$elm_bulma$Helpers$node,
@@ -12570,7 +12660,354 @@ var $author$project$Main$view = function (model) {
 									[
 										$elm$html$Html$Attributes$class('notification is-warning')
 									]),
-								_List_Nil),
+								_List_fromArray(
+									[
+										A3(
+										$surprisetalk$elm_bulma$Bulma$Layout$verticalTile,
+										$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$p,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('title')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Quarter Finals')
+													])),
+												A3(
+												$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
+												$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$surprisetalk$elm_bulma$Bulma$Layout$level,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'Group A'),
+																A2(
+																$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('v')
+																	])),
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Runner Up',
+																'Group B')
+															]))
+													])),
+												A3(
+												$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
+												$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$surprisetalk$elm_bulma$Bulma$Layout$level,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'Group B'),
+																A2(
+																$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('v')
+																	])),
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Runner Up',
+																'Group A')
+															]))
+													])),
+												A3(
+												$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
+												$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$surprisetalk$elm_bulma$Bulma$Layout$level,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'Group C'),
+																A2(
+																$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('v')
+																	])),
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Runner Up',
+																'Group D')
+															]))
+													])),
+												A3(
+												$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
+												$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$surprisetalk$elm_bulma$Bulma$Layout$level,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'Group D'),
+																A2(
+																$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('v')
+																	])),
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Runner Up',
+																'Group C')
+															]))
+													]))
+											])),
+										A3(
+										$surprisetalk$elm_bulma$Bulma$Layout$verticalTile,
+										$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$p,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('title')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Semi Finals')
+													])),
+												A3(
+												$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
+												$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$surprisetalk$elm_bulma$Bulma$Layout$level,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'QF 1'),
+																A2(
+																$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('v')
+																	])),
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'QF 2')
+															]))
+													])),
+												A3(
+												$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
+												$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$surprisetalk$elm_bulma$Bulma$Layout$level,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'QF 3'),
+																A2(
+																$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('v')
+																	])),
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'QF 4')
+															]))
+													]))
+											])),
+										A3(
+										$surprisetalk$elm_bulma$Bulma$Layout$verticalTile,
+										$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+										_List_Nil,
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$p,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('title')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('Final')
+													])),
+												A3(
+												$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
+												$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$surprisetalk$elm_bulma$Bulma$Layout$level,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'SF 1'),
+																A2(
+																$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																_List_fromArray(
+																	[
+																		$elm$html$Html$text('v')
+																	])),
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'SF 2')
+															]))
+													])),
+												A3(
+												$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
+												$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+												_List_Nil,
+												_List_fromArray(
+													[
+														A2(
+														$surprisetalk$elm_bulma$Bulma$Layout$level,
+														_List_Nil,
+														_List_fromArray(
+															[
+																A3(
+																$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('has-text-centered')
+																	]),
+																'Winner',
+																'TBD')
+															]))
+													]))
+											]))
+									])),
 								A3(
 								$surprisetalk$elm_bulma$Bulma$Layout$verticalTileParent,
 								$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,

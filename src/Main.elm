@@ -8,7 +8,7 @@ import Bulma.Elements exposing (..)
 import Bulma.Layout exposing (..)
 import Bulma.Modifiers exposing (..)
 import Debug exposing (..)
-import Html exposing (Html, main_, text)
+import Html exposing (Html, main_, p, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Http
@@ -89,7 +89,83 @@ view model =
             []
             [ tileAncestor Auto
                 []
-                [ tileParent Width8 [ class "notification is-warning" ] []
+                [ tileParent Width8
+                    [ class "notification is-warning" ]
+                    [ verticalTile Auto
+                        []
+                        [ p [ class "title" ] [ text "Quarter Finals" ]
+                        , tileChild Auto
+                            []
+                            [ level []
+                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group A"
+                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group B"
+                                ]
+                            ]
+                        , tileChild Auto
+                            []
+                            [ level []
+                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group B"
+                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group A"
+                                ]
+                            ]
+                        , tileChild Auto
+                            []
+                            [ level []
+                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group C"
+                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group D"
+                                ]
+                            ]
+                        , tileChild Auto
+                            []
+                            [ level []
+                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group D"
+                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group C"
+                                ]
+                            ]
+                        ]
+                    , verticalTile Auto
+                        []
+                        [ p [ class "title" ] [ text "Semi Finals" ]
+                        , tileChild Auto
+                            []
+                            [ level []
+                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "QF 1"
+                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "QF 2"
+                                ]
+                            ]
+                        , tileChild Auto
+                            []
+                            [ level []
+                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "QF 3"
+                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "QF 4"
+                                ]
+                            ]
+                        ]
+                    , verticalTile Auto
+                        []
+                        [ p [ class "title" ] [ text "Final" ]
+                        , tileChild Auto
+                            []
+                            [ level []
+                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "SF 1"
+                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "SF 2"
+                                ]
+                            ]
+                        , tileChild Auto
+                            []
+                            [ level []
+                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "TBD"
+                                ]
+                            ]
+                        ]
+                    ]
                 , verticalTileParent Auto
                     []
                     [ tileChild Auto
@@ -173,7 +249,11 @@ groupsContentTableBody model =
     in
     case activeGroup of
         Just group ->
-            tableBody [] (List.map teamRow (teamsOrderedByPoints group))
+            let
+                groupTeamsByPoints = teamsOrderedByPoints group
+                teamsWithPositions = List.indexedMap Tuple.pair groupTeamsByPoints
+            in
+            tableBody [] (List.map teamRow teamsWithPositions)
 
         Nothing ->
             tableRow False [] []
@@ -268,11 +348,11 @@ isDraw fixture =
     fixture.result == Just Draw
 
 
-teamRow : TeamStats -> TableRow Msg
-teamRow teamStats =
+teamRow : (Int, TeamStats) -> TableRow Msg
+teamRow (position, teamStats) =
     tableRow False
         []
-        [ tableCell [] [ text (String.fromInt 0) ]
+        [ tableCell [] [ text (String.fromInt (position + 1)) ]
         , tableCell [] [ text teamStats.name ]
         , tableCell [] [ text (String.fromInt (getPlayed teamStats.wins teamStats.draws teamStats.losses)) ]
         , tableCell [] [ text (String.fromInt teamStats.wins) ]
