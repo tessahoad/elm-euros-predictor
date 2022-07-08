@@ -26,10 +26,12 @@ type Msg
 type alias Model =
     { ratings : List Team
     , groups : List Group
-    , errorMessage : Maybe String
     , activeGroupTab : String
     , randomFloat : Float
     , lastPlayedRound : Maybe Round
+    , quarterFinalFixtures: Maybe (List Fixture)
+    , semiFinalFixtures: Maybe (List Fixture)
+    , finalFixture: Maybe Fixture
     }
 
 
@@ -40,11 +42,13 @@ init _ =
     let
         model =
             { ratings = []
-            , errorMessage = Nothing
             , groups = []
             , activeGroupTab = "A"
             , randomFloat = 0.5
             , lastPlayedRound = Nothing
+            , quarterFinalFixtures = Nothing
+            , semiFinalFixtures = Nothing
+            , finalFixture = Nothing
             }
     in
     ( model, Cmd.batch [ getGroups, Random.generate NewRandomNumber (Random.float 0 1) ] )
@@ -436,6 +440,49 @@ getQuarterFinalFixtures groups =
     in
     [ quarterFinal1, quarterFinal2, quarterFinal3, quarterFinal4 ]
 
+getSemiFinalFixtures : List Fixture -> List Fixture
+getSemiFinalFixtures quarterFinalResults =
+    let
+        winners = List.map getFixtureWinner quarterFinalResults
+        firstPair = List.take 2 winners
+        secondPair = List.take 2 (List.drop 2 winners)
+        firstSemiFinalHomeTeam = getTeamFromList firstPair
+        firstSemiFinalAwayTeam = getTeamFromList(List.drop 1 firstPair)
+        secondSemiFinalHomeTeam = getTeamFromList secondPair
+        secondSemiFinalAwayTeam = getTeamFromList (List.drop 1 secondPair)
+        firstSemiFinal = { homeTeam = firstSemiFinalHomeTeam, awayTeam = firstSemiFinalAwayTeam, round = SemiFinal, result = Nothing }
+        secondSemiFinal = { homeTeam = secondSemiFinalHomeTeam, awayTeam = secondSemiFinalAwayTeam, round = SemiFinal, result = Nothing }
+    in
+    [firstSemiFinal, secondSemiFinal]
+
+
+
+getFinalFixture : List Fixture -> Fixture
+getFinalFixture semiFinalResults =
+    let
+        winners = List.map getFixtureWinner semiFinalResults
+        firstTeam = getTeamFromList winners
+        secondTeam = getTeamFromList (List.drop 1 winners)
+    in
+    { homeTeam = firstTeam, awayTeam = secondTeam, round = Final, result = Nothing }
+
+getTeamFromList: List String -> String
+getTeamFromList teams =
+    let
+        maybeTeam = List.head (List.take 1 teams)
+    in
+    case maybeTeam of
+        Just team -> team
+        Nothing -> ""
+
+getFixtureWinner : Fixture -> String
+getFixtureWinner fixture =
+    case fixture.result of
+        Just HomeWin -> fixture.homeTeam
+        Just Draw -> fixture.homeTeam
+        Just HomeLoss -> fixture.awayTeam
+        Nothing -> ""
+
 
 getGroupByName : String -> List Group -> Group
 getGroupByName name groups =
@@ -508,16 +555,16 @@ playRound model =
                     playGroupsRound model.groups model.randomFloat
 
                 Just Round3 ->
-                    playGroupsRound model.groups model.randomFloat
+                    model.groups
 
                 Just QuarterFinal ->
-                    playGroupsRound model.groups model.randomFloat
+                    model.groups
 
                 Just SemiFinal ->
-                    playGroupsRound model.groups model.randomFloat
+                    model.groups
 
                 Just Final ->
-                    playGroupsRound model.groups model.randomFloat
+                    model.groups
 
         justPlayedRound =
             case model.lastPlayedRound of
@@ -541,11 +588,59 @@ playRound model =
 
                 Just Final ->
                     Nothing
+
+        updatedQuarterFinals =
+            case justPlayedRound of
+                Just Round3 -> Just (getQuarterFinalFixtures model.groups)
+                Just QuarterFinal -> Just (Tuple.first (playFixtures model.randomFloat model.quarterFinalFixtures (getAllTeams model.groups)))
+                Just SemiFinal -> model.quarterFinalFixtures
+                Just Final -> model.quarterFinalFixtures
+                _ -> Nothing
+
+        quarterFinalFixtures =
+            case updatedQuarterFinals of
+                Just fixtures -> fixtures
+                Nothing -> []
+
+        updatedSemiFinals =
+            case justPlayedRound of
+                Just QuarterFinal -> Just (getSemiFinalFixtures quarterFinalFixtures)
+                Just SemiFinal -> Just (Tuple.first (playFixtures model.randomFloat model.semiFinalFixtures (getAllTeams model.groups)))
+                Just Final -> model.semiFinalFixtures
+                _ -> Nothing
+
+        semiFinalFixtures =
+            case updatedSemiFinals of
+                Just fixtures -> fixtures
+                Nothing -> []
+
+        updatedFinal =
+            case justPlayedRound of
+                Just SemiFinal -> Just (getFinalFixture semiFinalFixtures)
+                Just Final ->
+                    let
+                        x = case model.finalFixture of
+                            Just final -> Just (playFixture model.randomFloat (getAllTeams model.groups) final)
+                            Nothing -> Nothing
+                    in
+                    x
+                _ -> Nothing
     in
     { model
         | groups = updatedGroups
         , lastPlayedRound = justPlayedRound
+        , quarterFinalFixtures = updatedQuarterFinals
+        , semiFinalFixtures = updatedSemiFinals
+        , finalFixture = updatedFinal
     }
+
+getAllTeams : List Group -> List Team
+getAllTeams groups =
+    List.concat (List.map getGroupTeams groups)
+
+getGroupTeams: Group -> List Team
+getGroupTeams group =
+    group.teams
 
 
 playGroupsRound : List Group -> Float -> List Group
@@ -583,7 +678,7 @@ playGroupRound randomFloat group =
     if not round1Finished then
         let
             result =
-                playFixtures randomFloat round1Fixtures group.teams
+                playFixtures randomFloat (Just round1Fixtures) group.teams
 
             updatedFixtures =
                 Tuple.first result ++ round2Fixtures ++ round3Fixtures ++ playedFixtures
@@ -593,7 +688,7 @@ playGroupRound randomFloat group =
     else if not round2Finished then
         let
             result =
-                playFixtures randomFloat round2Fixtures group.teams
+                playFixtures randomFloat (Just round2Fixtures) group.teams
 
             updatedFixtures =
                 Tuple.first result ++ round3Fixtures ++ playedFixtures
@@ -603,7 +698,7 @@ playGroupRound randomFloat group =
     else if not round3Finished then
         let
             result =
-                playFixtures randomFloat round3Fixtures group.teams
+                playFixtures randomFloat (Just round3Fixtures) group.teams
 
             updatedFixtures =
                 Tuple.first result ++ playedFixtures
@@ -614,11 +709,13 @@ playGroupRound randomFloat group =
         group
 
 
-playFixtures : Float -> List Fixture -> List Team -> ( List Fixture, List Team )
-playFixtures randomFloat fixtures teams =
+playFixtures : Float -> Maybe (List Fixture) -> List Team -> ( List Fixture, List Team )
+playFixtures randomFloat maybeFixtures teams =
     let
         updatedFixtures =
-            List.map (playFixture randomFloat teams) fixtures
+            case maybeFixtures of
+                Just fixtures -> List.map (playFixture randomFloat teams) fixtures
+                Nothing -> []
     in
     ( updatedFixtures, teams )
 

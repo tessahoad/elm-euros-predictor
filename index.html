@@ -11319,7 +11319,7 @@ var $author$project$Main$getGroups = function () {
 		});
 }();
 var $author$project$Main$init = function (_v0) {
-	var model = {activeGroupTab: 'A', errorMessage: $elm$core$Maybe$Nothing, groups: _List_Nil, lastPlayedRound: $elm$core$Maybe$Nothing, randomFloat: 0.5, ratings: _List_Nil};
+	var model = {activeGroupTab: 'A', finalFixture: $elm$core$Maybe$Nothing, groups: _List_Nil, lastPlayedRound: $elm$core$Maybe$Nothing, quarterFinalFixtures: $elm$core$Maybe$Nothing, randomFloat: 0.5, ratings: _List_Nil, semiFinalFixtures: $elm$core$Maybe$Nothing};
 	return _Utils_Tuple2(
 		model,
 		$elm$core$Platform$Cmd$batch(
@@ -11337,6 +11337,183 @@ var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
 var $author$project$API$Final = {$: 'Final'};
 var $author$project$API$QuarterFinal = {$: 'QuarterFinal'};
 var $author$project$API$SemiFinal = {$: 'SemiFinal'};
+var $author$project$Main$getGroupTeams = function (group) {
+	return group.teams;
+};
+var $author$project$Main$getAllTeams = function (groups) {
+	return $elm$core$List$concat(
+		A2($elm$core$List$map, $author$project$Main$getGroupTeams, groups));
+};
+var $author$project$Main$getFixtureWinner = function (fixture) {
+	var _v0 = fixture.result;
+	if (_v0.$ === 'Just') {
+		switch (_v0.a.$) {
+			case 'HomeWin':
+				var _v1 = _v0.a;
+				return fixture.homeTeam;
+			case 'Draw':
+				var _v2 = _v0.a;
+				return fixture.homeTeam;
+			default:
+				var _v3 = _v0.a;
+				return fixture.awayTeam;
+		}
+	} else {
+		return '';
+	}
+};
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$takeReverse = F3(
+	function (n, list, kept) {
+		takeReverse:
+		while (true) {
+			if (n <= 0) {
+				return kept;
+			} else {
+				if (!list.b) {
+					return kept;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs,
+						$temp$kept = A2($elm$core$List$cons, x, kept);
+					n = $temp$n;
+					list = $temp$list;
+					kept = $temp$kept;
+					continue takeReverse;
+				}
+			}
+		}
+	});
+var $elm$core$List$takeTailRec = F2(
+	function (n, list) {
+		return $elm$core$List$reverse(
+			A3($elm$core$List$takeReverse, n, list, _List_Nil));
+	});
+var $elm$core$List$takeFast = F3(
+	function (ctr, n, list) {
+		if (n <= 0) {
+			return _List_Nil;
+		} else {
+			var _v0 = _Utils_Tuple2(n, list);
+			_v0$1:
+			while (true) {
+				_v0$5:
+				while (true) {
+					if (!_v0.b.b) {
+						return list;
+					} else {
+						if (_v0.b.b.b) {
+							switch (_v0.a) {
+								case 1:
+									break _v0$1;
+								case 2:
+									var _v2 = _v0.b;
+									var x = _v2.a;
+									var _v3 = _v2.b;
+									var y = _v3.a;
+									return _List_fromArray(
+										[x, y]);
+								case 3:
+									if (_v0.b.b.b.b) {
+										var _v4 = _v0.b;
+										var x = _v4.a;
+										var _v5 = _v4.b;
+										var y = _v5.a;
+										var _v6 = _v5.b;
+										var z = _v6.a;
+										return _List_fromArray(
+											[x, y, z]);
+									} else {
+										break _v0$5;
+									}
+								default:
+									if (_v0.b.b.b.b && _v0.b.b.b.b.b) {
+										var _v7 = _v0.b;
+										var x = _v7.a;
+										var _v8 = _v7.b;
+										var y = _v8.a;
+										var _v9 = _v8.b;
+										var z = _v9.a;
+										var _v10 = _v9.b;
+										var w = _v10.a;
+										var tl = _v10.b;
+										return (ctr > 1000) ? A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A2($elm$core$List$takeTailRec, n - 4, tl))))) : A2(
+											$elm$core$List$cons,
+											x,
+											A2(
+												$elm$core$List$cons,
+												y,
+												A2(
+													$elm$core$List$cons,
+													z,
+													A2(
+														$elm$core$List$cons,
+														w,
+														A3($elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
+									} else {
+										break _v0$5;
+									}
+							}
+						} else {
+							if (_v0.a === 1) {
+								break _v0$1;
+							} else {
+								break _v0$5;
+							}
+						}
+					}
+				}
+				return list;
+			}
+			var _v1 = _v0.b;
+			var x = _v1.a;
+			return _List_fromArray(
+				[x]);
+		}
+	});
+var $elm$core$List$take = F2(
+	function (n, list) {
+		return A3($elm$core$List$takeFast, 0, n, list);
+	});
+var $author$project$Main$getTeamFromList = function (teams) {
+	var maybeTeam = $elm$core$List$head(
+		A2($elm$core$List$take, 1, teams));
+	if (maybeTeam.$ === 'Just') {
+		var team = maybeTeam.a;
+		return team;
+	} else {
+		return '';
+	}
+};
+var $author$project$Main$getFinalFixture = function (semiFinalResults) {
+	var winners = A2($elm$core$List$map, $author$project$Main$getFixtureWinner, semiFinalResults);
+	var secondTeam = $author$project$Main$getTeamFromList(
+		A2($elm$core$List$drop, 1, winners));
+	var firstTeam = $author$project$Main$getTeamFromList(winners);
+	return {awayTeam: secondTeam, homeTeam: firstTeam, result: $elm$core$Maybe$Nothing, round: $author$project$API$Final};
+};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -11348,15 +11525,191 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
-var $author$project$Main$isGroupRound = F2(
-	function (round, fixture) {
-		return _Utils_eq(round, fixture.round);
+var $author$project$Main$groupNameMatch = F2(
+	function (name, group) {
+		return _Utils_eq(name, group.name);
+	});
+var $author$project$Main$getGroupByName = F2(
+	function (name, groups) {
+		var filteredGroups = A2(
+			$elm$core$List$filter,
+			$author$project$Main$groupNameMatch(name),
+			groups);
+		var maybeGroup = $elm$core$List$head(filteredGroups);
+		if (maybeGroup.$ === 'Just') {
+			var group = maybeGroup.a;
+			return group;
+		} else {
+			return {fixtures: _List_Nil, name: '', teams: _List_Nil};
+		}
+	});
+var $elm$core$List$tail = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(xs);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Main$isAwayWin = function (fixture) {
+	return _Utils_eq(
+		fixture.result,
+		$elm$core$Maybe$Just($author$project$API$HomeLoss));
+};
+var $author$project$Main$getAwayWins = function (fixtures) {
+	return $elm$core$List$length(
+		A2($elm$core$List$filter, $author$project$Main$isAwayWin, fixtures));
+};
+var $author$project$Main$isDraw = function (fixture) {
+	return _Utils_eq(
+		fixture.result,
+		$elm$core$Maybe$Just($author$project$API$Draw));
+};
+var $author$project$Main$getDraws = function (fixtures) {
+	return $elm$core$List$length(
+		A2($elm$core$List$filter, $author$project$Main$isDraw, fixtures));
+};
+var $author$project$Main$isHomeWin = function (fixture) {
+	return _Utils_eq(
+		fixture.result,
+		$elm$core$Maybe$Just($author$project$API$HomeWin));
+};
+var $author$project$Main$getHomeWins = function (fixtures) {
+	return $elm$core$List$length(
+		A2($elm$core$List$filter, $author$project$Main$isHomeWin, fixtures));
+};
+var $author$project$Main$getPoints = F2(
+	function (wins, draws) {
+		return (wins * 3) + draws;
+	});
+var $author$project$Main$isAwayFixture = F2(
+	function (teamName, fixture) {
+		return _Utils_eq(fixture.awayTeam, teamName);
+	});
+var $author$project$Main$isHomeFixture = F2(
+	function (teamName, fixture) {
+		return _Utils_eq(fixture.homeTeam, teamName);
 	});
 var $author$project$Main$isPlayedFixture = function (fixture) {
 	return !_Utils_eq(fixture.result, $elm$core$Maybe$Nothing);
 };
-var $author$project$Main$isUnplayedFixture = function (fixture) {
-	return _Utils_eq(fixture.result, $elm$core$Maybe$Nothing);
+var $author$project$Main$getTeamStats = F2(
+	function (fixtures, team) {
+		var playedFixtures = A2($elm$core$List$filter, $author$project$Main$isPlayedFixture, fixtures);
+		var playedHomeFixtures = A2(
+			$elm$core$List$filter,
+			$author$project$Main$isHomeFixture(team.name),
+			playedFixtures);
+		var playedAwayFixtures = A2(
+			$elm$core$List$filter,
+			$author$project$Main$isAwayFixture(team.name),
+			playedFixtures);
+		var wins = $author$project$Main$getHomeWins(playedHomeFixtures) + $author$project$Main$getAwayWins(playedAwayFixtures);
+		var draws = $author$project$Main$getDraws(playedHomeFixtures) + $author$project$Main$getDraws(playedAwayFixtures);
+		var losses = (($elm$core$List$length(playedHomeFixtures) + $elm$core$List$length(playedAwayFixtures)) - wins) - draws;
+		return {
+			draws: draws,
+			losses: losses,
+			name: team.name,
+			points: A2($author$project$Main$getPoints, wins, draws),
+			wins: wins
+		};
+	});
+var $author$project$Main$listTeamStats = function (group) {
+	return A2(
+		$elm$core$List$map,
+		$author$project$Main$getTeamStats(group.fixtures),
+		group.teams);
+};
+var $elm$core$List$sortBy = _List_sortBy;
+var $author$project$Main$teamsOrderedByPoints = function (group) {
+	return $elm$core$List$reverse(
+		A2(
+			$elm$core$List$sortBy,
+			function ($) {
+				return $.points;
+			},
+			$author$project$Main$listTeamStats(group)));
+};
+var $author$project$Main$getGroupRunnerUp = function (group) {
+	var maybeTeams = $elm$core$List$tail(
+		$author$project$Main$teamsOrderedByPoints(group));
+	var teams = function () {
+		if (maybeTeams.$ === 'Just') {
+			var justTeams = maybeTeams.a;
+			return justTeams;
+		} else {
+			return _List_Nil;
+		}
+	}();
+	var maybeRunnerUp = $elm$core$List$head(teams);
+	if (maybeRunnerUp.$ === 'Just') {
+		var runnerUp = maybeRunnerUp.a;
+		return runnerUp.name;
+	} else {
+		return '';
+	}
+};
+var $author$project$Main$getGroupWinner = function (group) {
+	var maybeWinner = $elm$core$List$head(
+		$author$project$Main$teamsOrderedByPoints(group));
+	if (maybeWinner.$ === 'Just') {
+		var winner = maybeWinner.a;
+		return winner.name;
+	} else {
+		return '';
+	}
+};
+var $author$project$Main$getQuarterFinalFixtures = function (groups) {
+	var groupD = A2($author$project$Main$getGroupByName, 'D', groups);
+	var groupC = A2($author$project$Main$getGroupByName, 'C', groups);
+	var quarterFinal3 = {
+		awayTeam: $author$project$Main$getGroupRunnerUp(groupD),
+		homeTeam: $author$project$Main$getGroupWinner(groupC),
+		result: $elm$core$Maybe$Nothing,
+		round: $author$project$API$QuarterFinal
+	};
+	var quarterFinal4 = {
+		awayTeam: $author$project$Main$getGroupRunnerUp(groupC),
+		homeTeam: $author$project$Main$getGroupWinner(groupD),
+		result: $elm$core$Maybe$Nothing,
+		round: $author$project$API$QuarterFinal
+	};
+	var groupB = A2($author$project$Main$getGroupByName, 'B', groups);
+	var groupA = A2($author$project$Main$getGroupByName, 'A', groups);
+	var quarterFinal1 = {
+		awayTeam: $author$project$Main$getGroupRunnerUp(groupB),
+		homeTeam: $author$project$Main$getGroupWinner(groupA),
+		result: $elm$core$Maybe$Nothing,
+		round: $author$project$API$QuarterFinal
+	};
+	var quarterFinal2 = {
+		awayTeam: $author$project$Main$getGroupRunnerUp(groupA),
+		homeTeam: $author$project$Main$getGroupWinner(groupB),
+		result: $elm$core$Maybe$Nothing,
+		round: $author$project$API$QuarterFinal
+	};
+	return _List_fromArray(
+		[quarterFinal1, quarterFinal2, quarterFinal3, quarterFinal4]);
+};
+var $author$project$Main$getSemiFinalFixtures = function (quarterFinalResults) {
+	var winners = A2($elm$core$List$map, $author$project$Main$getFixtureWinner, quarterFinalResults);
+	var secondPair = A2(
+		$elm$core$List$take,
+		2,
+		A2($elm$core$List$drop, 2, winners));
+	var secondSemiFinalAwayTeam = $author$project$Main$getTeamFromList(
+		A2($elm$core$List$drop, 1, secondPair));
+	var secondSemiFinalHomeTeam = $author$project$Main$getTeamFromList(secondPair);
+	var secondSemiFinal = {awayTeam: secondSemiFinalAwayTeam, homeTeam: secondSemiFinalHomeTeam, result: $elm$core$Maybe$Nothing, round: $author$project$API$SemiFinal};
+	var firstPair = A2($elm$core$List$take, 2, winners);
+	var firstSemiFinalAwayTeam = $author$project$Main$getTeamFromList(
+		A2($elm$core$List$drop, 1, firstPair));
+	var firstSemiFinalHomeTeam = $author$project$Main$getTeamFromList(firstPair);
+	var firstSemiFinal = {awayTeam: firstSemiFinalAwayTeam, homeTeam: firstSemiFinalHomeTeam, result: $elm$core$Maybe$Nothing, round: $author$project$API$SemiFinal};
+	return _List_fromArray(
+		[firstSemiFinal, secondSemiFinal]);
 };
 var $elm$core$Basics$pow = _Basics_pow;
 var $author$project$Main$getFixtureResult = F3(
@@ -11373,15 +11726,6 @@ var $author$project$Main$getFixtureResult = F3(
 			return draws ? $author$project$API$Draw : $author$project$API$HomeLoss;
 		}
 	});
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $author$project$Main$teamNameMatch = F2(
 	function (name, team) {
 		return _Utils_eq(name, team.name);
@@ -11432,13 +11776,27 @@ var $author$project$Main$playFixture = F3(
 		}
 	});
 var $author$project$Main$playFixtures = F3(
-	function (randomFloat, fixtures, teams) {
-		var updatedFixtures = A2(
-			$elm$core$List$map,
-			A2($author$project$Main$playFixture, randomFloat, teams),
-			fixtures);
+	function (randomFloat, maybeFixtures, teams) {
+		var updatedFixtures = function () {
+			if (maybeFixtures.$ === 'Just') {
+				var fixtures = maybeFixtures.a;
+				return A2(
+					$elm$core$List$map,
+					A2($author$project$Main$playFixture, randomFloat, teams),
+					fixtures);
+			} else {
+				return _List_Nil;
+			}
+		}();
 		return _Utils_Tuple2(updatedFixtures, teams);
 	});
+var $author$project$Main$isGroupRound = F2(
+	function (round, fixture) {
+		return _Utils_eq(round, fixture.round);
+	});
+var $author$project$Main$isUnplayedFixture = function (fixture) {
+	return _Utils_eq(fixture.result, $elm$core$Maybe$Nothing);
+};
 var $author$project$Main$playGroupRound = F2(
 	function (randomFloat, group) {
 		var unplayedFixtures = A2($elm$core$List$filter, $author$project$Main$isUnplayedFixture, group.fixtures);
@@ -11459,7 +11817,11 @@ var $author$project$Main$playGroupRound = F2(
 		var round1Finished = $elm$core$List$isEmpty(round1Fixtures);
 		var playedFixtures = A2($elm$core$List$filter, $author$project$Main$isPlayedFixture, group.fixtures);
 		if (!round1Finished) {
-			var result = A3($author$project$Main$playFixtures, randomFloat, round1Fixtures, group.teams);
+			var result = A3(
+				$author$project$Main$playFixtures,
+				randomFloat,
+				$elm$core$Maybe$Just(round1Fixtures),
+				group.teams);
 			var updatedFixtures = _Utils_ap(
 				result.a,
 				_Utils_ap(
@@ -11470,7 +11832,11 @@ var $author$project$Main$playGroupRound = F2(
 				{fixtures: updatedFixtures, teams: result.b});
 		} else {
 			if (!round2Finished) {
-				var result = A3($author$project$Main$playFixtures, randomFloat, round2Fixtures, group.teams);
+				var result = A3(
+					$author$project$Main$playFixtures,
+					randomFloat,
+					$elm$core$Maybe$Just(round2Fixtures),
+					group.teams);
 				var updatedFixtures = _Utils_ap(
 					result.a,
 					_Utils_ap(round3Fixtures, playedFixtures));
@@ -11479,7 +11845,11 @@ var $author$project$Main$playGroupRound = F2(
 					{fixtures: updatedFixtures, teams: result.b});
 			} else {
 				if (!round3Finished) {
-					var result = A3($author$project$Main$playFixtures, randomFloat, round3Fixtures, group.teams);
+					var result = A3(
+						$author$project$Main$playFixtures,
+						randomFloat,
+						$elm$core$Maybe$Just(round3Fixtures),
+						group.teams);
 					var updatedFixtures = _Utils_ap(result.a, playedFixtures);
 					return _Utils_update(
 						group,
@@ -11499,62 +11869,174 @@ var $author$project$Main$playGroupsRound = F2(
 	});
 var $author$project$Main$playRound = function (model) {
 	var updatedGroups = function () {
-		var _v7 = model.lastPlayedRound;
-		if (_v7.$ === 'Nothing') {
+		var _v22 = model.lastPlayedRound;
+		if (_v22.$ === 'Nothing') {
 			return A2($author$project$Main$playGroupsRound, model.groups, model.randomFloat);
 		} else {
-			switch (_v7.a.$) {
+			switch (_v22.a.$) {
 				case 'Round1':
-					var _v8 = _v7.a;
+					var _v23 = _v22.a;
 					return A2($author$project$Main$playGroupsRound, model.groups, model.randomFloat);
 				case 'Round2':
-					var _v9 = _v7.a;
+					var _v24 = _v22.a;
 					return A2($author$project$Main$playGroupsRound, model.groups, model.randomFloat);
 				case 'Round3':
-					var _v10 = _v7.a;
-					return A2($author$project$Main$playGroupsRound, model.groups, model.randomFloat);
+					var _v25 = _v22.a;
+					return model.groups;
 				case 'QuarterFinal':
-					var _v11 = _v7.a;
-					return A2($author$project$Main$playGroupsRound, model.groups, model.randomFloat);
+					var _v26 = _v22.a;
+					return model.groups;
 				case 'SemiFinal':
-					var _v12 = _v7.a;
-					return A2($author$project$Main$playGroupsRound, model.groups, model.randomFloat);
+					var _v27 = _v22.a;
+					return model.groups;
 				default:
-					var _v13 = _v7.a;
-					return A2($author$project$Main$playGroupsRound, model.groups, model.randomFloat);
+					var _v28 = _v22.a;
+					return model.groups;
 			}
 		}
 	}();
 	var justPlayedRound = function () {
-		var _v0 = model.lastPlayedRound;
-		if (_v0.$ === 'Nothing') {
+		var _v15 = model.lastPlayedRound;
+		if (_v15.$ === 'Nothing') {
 			return $elm$core$Maybe$Just($author$project$API$Round1);
 		} else {
-			switch (_v0.a.$) {
+			switch (_v15.a.$) {
 				case 'Round1':
-					var _v1 = _v0.a;
+					var _v16 = _v15.a;
 					return $elm$core$Maybe$Just($author$project$API$Round2);
 				case 'Round2':
-					var _v2 = _v0.a;
+					var _v17 = _v15.a;
 					return $elm$core$Maybe$Just($author$project$API$Round3);
 				case 'Round3':
-					var _v3 = _v0.a;
+					var _v18 = _v15.a;
 					return $elm$core$Maybe$Just($author$project$API$QuarterFinal);
 				case 'QuarterFinal':
-					var _v4 = _v0.a;
+					var _v19 = _v15.a;
 					return $elm$core$Maybe$Just($author$project$API$SemiFinal);
 				case 'SemiFinal':
-					var _v5 = _v0.a;
+					var _v20 = _v15.a;
 					return $elm$core$Maybe$Just($author$project$API$Final);
 				default:
-					var _v6 = _v0.a;
+					var _v21 = _v15.a;
 					return $elm$core$Maybe$Nothing;
 			}
 		}
 	}();
+	var updatedQuarterFinals = function () {
+		_v10$4:
+		while (true) {
+			if (justPlayedRound.$ === 'Just') {
+				switch (justPlayedRound.a.$) {
+					case 'Round3':
+						var _v11 = justPlayedRound.a;
+						return $elm$core$Maybe$Just(
+							$author$project$Main$getQuarterFinalFixtures(model.groups));
+					case 'QuarterFinal':
+						var _v12 = justPlayedRound.a;
+						return $elm$core$Maybe$Just(
+							A3(
+								$author$project$Main$playFixtures,
+								model.randomFloat,
+								model.quarterFinalFixtures,
+								$author$project$Main$getAllTeams(model.groups)).a);
+					case 'SemiFinal':
+						var _v13 = justPlayedRound.a;
+						return model.quarterFinalFixtures;
+					case 'Final':
+						var _v14 = justPlayedRound.a;
+						return model.quarterFinalFixtures;
+					default:
+						break _v10$4;
+				}
+			} else {
+				break _v10$4;
+			}
+		}
+		return $elm$core$Maybe$Nothing;
+	}();
+	var quarterFinalFixtures = function () {
+		if (updatedQuarterFinals.$ === 'Just') {
+			var fixtures = updatedQuarterFinals.a;
+			return fixtures;
+		} else {
+			return _List_Nil;
+		}
+	}();
+	var updatedSemiFinals = function () {
+		_v5$3:
+		while (true) {
+			if (justPlayedRound.$ === 'Just') {
+				switch (justPlayedRound.a.$) {
+					case 'QuarterFinal':
+						var _v6 = justPlayedRound.a;
+						return $elm$core$Maybe$Just(
+							$author$project$Main$getSemiFinalFixtures(quarterFinalFixtures));
+					case 'SemiFinal':
+						var _v7 = justPlayedRound.a;
+						return $elm$core$Maybe$Just(
+							A3(
+								$author$project$Main$playFixtures,
+								model.randomFloat,
+								model.semiFinalFixtures,
+								$author$project$Main$getAllTeams(model.groups)).a);
+					case 'Final':
+						var _v8 = justPlayedRound.a;
+						return model.semiFinalFixtures;
+					default:
+						break _v5$3;
+				}
+			} else {
+				break _v5$3;
+			}
+		}
+		return $elm$core$Maybe$Nothing;
+	}();
+	var semiFinalFixtures = function () {
+		if (updatedSemiFinals.$ === 'Just') {
+			var fixtures = updatedSemiFinals.a;
+			return fixtures;
+		} else {
+			return _List_Nil;
+		}
+	}();
+	var updatedFinal = function () {
+		_v0$2:
+		while (true) {
+			if (justPlayedRound.$ === 'Just') {
+				switch (justPlayedRound.a.$) {
+					case 'SemiFinal':
+						var _v1 = justPlayedRound.a;
+						return $elm$core$Maybe$Just(
+							$author$project$Main$getFinalFixture(semiFinalFixtures));
+					case 'Final':
+						var _v2 = justPlayedRound.a;
+						var x = function () {
+							var _v3 = model.finalFixture;
+							if (_v3.$ === 'Just') {
+								var _final = _v3.a;
+								return $elm$core$Maybe$Just(
+									A3(
+										$author$project$Main$playFixture,
+										model.randomFloat,
+										$author$project$Main$getAllTeams(model.groups),
+										_final));
+							} else {
+								return $elm$core$Maybe$Nothing;
+							}
+						}();
+						return x;
+					default:
+						break _v0$2;
+				}
+			} else {
+				break _v0$2;
+			}
+		}
+		return $elm$core$Maybe$Nothing;
+	}();
 	return _Utils_update(
 		model,
-		{groups: updatedGroups, lastPlayedRound: justPlayedRound});
+		{finalFixture: updatedFinal, groups: updatedGroups, lastPlayedRound: justPlayedRound, quarterFinalFixtures: updatedQuarterFinals, semiFinalFixtures: updatedSemiFinals});
 };
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -11865,10 +12347,6 @@ var $surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading = F3(
 						]))
 				]));
 	});
-var $author$project$Main$groupNameMatch = F2(
-	function (name, group) {
-		return _Utils_eq(name, group.name);
-	});
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
@@ -11960,83 +12438,6 @@ var $author$project$Main$teamRow = function (_v0) {
 						$elm$core$String$fromInt(teamStats.points))
 					]))
 			]));
-};
-var $author$project$Main$isAwayWin = function (fixture) {
-	return _Utils_eq(
-		fixture.result,
-		$elm$core$Maybe$Just($author$project$API$HomeLoss));
-};
-var $author$project$Main$getAwayWins = function (fixtures) {
-	return $elm$core$List$length(
-		A2($elm$core$List$filter, $author$project$Main$isAwayWin, fixtures));
-};
-var $author$project$Main$isDraw = function (fixture) {
-	return _Utils_eq(
-		fixture.result,
-		$elm$core$Maybe$Just($author$project$API$Draw));
-};
-var $author$project$Main$getDraws = function (fixtures) {
-	return $elm$core$List$length(
-		A2($elm$core$List$filter, $author$project$Main$isDraw, fixtures));
-};
-var $author$project$Main$isHomeWin = function (fixture) {
-	return _Utils_eq(
-		fixture.result,
-		$elm$core$Maybe$Just($author$project$API$HomeWin));
-};
-var $author$project$Main$getHomeWins = function (fixtures) {
-	return $elm$core$List$length(
-		A2($elm$core$List$filter, $author$project$Main$isHomeWin, fixtures));
-};
-var $author$project$Main$getPoints = F2(
-	function (wins, draws) {
-		return (wins * 3) + draws;
-	});
-var $author$project$Main$isAwayFixture = F2(
-	function (teamName, fixture) {
-		return _Utils_eq(fixture.awayTeam, teamName);
-	});
-var $author$project$Main$isHomeFixture = F2(
-	function (teamName, fixture) {
-		return _Utils_eq(fixture.homeTeam, teamName);
-	});
-var $author$project$Main$getTeamStats = F2(
-	function (fixtures, team) {
-		var playedFixtures = A2($elm$core$List$filter, $author$project$Main$isPlayedFixture, fixtures);
-		var playedHomeFixtures = A2(
-			$elm$core$List$filter,
-			$author$project$Main$isHomeFixture(team.name),
-			playedFixtures);
-		var playedAwayFixtures = A2(
-			$elm$core$List$filter,
-			$author$project$Main$isAwayFixture(team.name),
-			playedFixtures);
-		var wins = $author$project$Main$getHomeWins(playedHomeFixtures) + $author$project$Main$getAwayWins(playedAwayFixtures);
-		var draws = $author$project$Main$getDraws(playedHomeFixtures) + $author$project$Main$getDraws(playedAwayFixtures);
-		var losses = (($elm$core$List$length(playedHomeFixtures) + $elm$core$List$length(playedAwayFixtures)) - wins) - draws;
-		return {
-			draws: draws,
-			losses: losses,
-			name: team.name,
-			points: A2($author$project$Main$getPoints, wins, draws),
-			wins: wins
-		};
-	});
-var $author$project$Main$listTeamStats = function (group) {
-	return A2(
-		$elm$core$List$map,
-		$author$project$Main$getTeamStats(group.fixtures),
-		group.teams);
-};
-var $elm$core$List$sortBy = _List_sortBy;
-var $author$project$Main$teamsOrderedByPoints = function (group) {
-	return $elm$core$List$reverse(
-		A2(
-			$elm$core$List$sortBy,
-			function ($) {
-				return $.points;
-			},
-			$author$project$Main$listTeamStats(group)));
 };
 var $author$project$Main$groupsContentTableBody = function (model) {
 	var activeGroup = $elm$core$List$head(
