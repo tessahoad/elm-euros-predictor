@@ -20,6 +20,7 @@ type Msg
     | FetchGroupsResult (Result Http.Error (List Group))
     | GroupTabClick String
     | SimulateRound
+    | SimulateTournament
     | NewRandomNumber Float
 
 
@@ -29,9 +30,9 @@ type alias Model =
     , activeGroupTab : String
     , randomFloat : Float
     , lastPlayedRound : Maybe Round
-    , quarterFinalFixtures: Maybe (List Fixture)
-    , semiFinalFixtures: Maybe (List Fixture)
-    , finalFixture: Maybe Fixture
+    , quarterFinalFixtures : Maybe (List Fixture)
+    , semiFinalFixtures : Maybe (List Fixture)
+    , finalFixture : Maybe Fixture
     }
 
 
@@ -95,80 +96,9 @@ view model =
                 []
                 [ tileParent Width8
                     [ class "notification is-warning" ]
-                    [ verticalTile Auto
-                        []
-                        [ p [ class "title" ] [ text "Quarter Finals" ]
-                        , tileChild Auto
-                            []
-                            [ level []
-                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group A"
-                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
-                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group B"
-                                ]
-                            ]
-                        , tileChild Auto
-                            []
-                            [ level []
-                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group B"
-                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
-                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group A"
-                                ]
-                            ]
-                        , tileChild Auto
-                            []
-                            [ level []
-                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group C"
-                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
-                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group D"
-                                ]
-                            ]
-                        , tileChild Auto
-                            []
-                            [ level []
-                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group D"
-                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
-                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group C"
-                                ]
-                            ]
-                        ]
-                    , verticalTile Auto
-                        []
-                        [ p [ class "title" ] [ text "Semi Finals" ]
-                        , tileChild Auto
-                            []
-                            [ level []
-                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "QF 1"
-                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
-                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "QF 2"
-                                ]
-                            ]
-                        , tileChild Auto
-                            []
-                            [ level []
-                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "QF 3"
-                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
-                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "QF 4"
-                                ]
-                            ]
-                        ]
-                    , verticalTile Auto
-                        []
-                        [ p [ class "title" ] [ text "Final" ]
-                        , tileChild Auto
-                            []
-                            [ level []
-                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "SF 1"
-                                , levelItemText [ class "has-text-centered" ] [ text "v" ]
-                                , easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "SF 2"
-                                ]
-                            ]
-                        , tileChild Auto
-                            []
-                            [ level []
-                                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "TBD"
-                                ]
-                            ]
-                        ]
+                    [ showQuarterFinals model.quarterFinalFixtures
+                    , showSemiFinals model.semiFinalFixtures
+                    , showFinal model.finalFixture
                     ]
                 , verticalTileParent Auto
                     []
@@ -187,7 +117,7 @@ view model =
                                 ]
                             , tileChild Auto
                                 []
-                                [ button myButtonModifiers [] [ text "Simulate Tournament" ]
+                                [ button myButtonModifiers [ onClick SimulateTournament ] [ text "Simulate Tournament" ]
                                 ]
                             ]
                         , tileParent Auto
@@ -205,6 +135,252 @@ view model =
                 ]
             ]
         ]
+
+
+getKnownTeamLevelItem : String -> Html Msg
+getKnownTeamLevelItem team =
+    easyLevelItemWithHeading [ class "has-text-centered" ] "" team
+
+
+getTBDLevelItem : String -> Html Msg
+getTBDLevelItem placeholder =
+    easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" placeholder
+
+
+getVLevelItem : Html Msg
+getVLevelItem =
+    levelItemText [ class "has-text-centered" ] [ text "v" ]
+
+
+getTBDTileChild : String -> String -> Html Msg
+getTBDTileChild placeholder1 placeholder2 =
+    tileChild Auto
+        []
+        [ level []
+            [ getTBDLevelItem placeholder1
+            , getVLevelItem
+            , getTBDLevelItem placeholder2
+            ]
+        ]
+
+
+getKnownTeamsTileChild : String -> String -> Html Msg
+getKnownTeamsTileChild homeTeam awayTeam =
+    tileChild Auto
+        []
+        [ level []
+            [ getKnownTeamLevelItem homeTeam
+            , getVLevelItem
+            , getKnownTeamLevelItem awayTeam
+            ]
+        ]
+
+
+showFinal : Maybe Fixture -> Html Msg
+showFinal maybeFinal =
+    let
+        finalLeftTeam =
+            case maybeFinal of
+                Just final ->
+                    final.homeTeam
+
+                Nothing ->
+                    "SF 1"
+
+        finalRightTeam =
+            case maybeFinal of
+                Just final ->
+                    final.awayTeam
+
+                Nothing ->
+                    "SF 2"
+
+        firstTileChild =
+            case maybeFinal of
+                Just _ ->
+                    getKnownTeamsTileChild finalLeftTeam finalRightTeam
+
+                Nothing ->
+                    getTBDTileChild finalLeftTeam finalRightTeam
+    in
+    verticalTile Auto
+        []
+        [ p [ class "title" ] [ text "Final" ]
+        , firstTileChild
+        , tileChild Auto
+            []
+            [ level []
+                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" (getFinalWinner maybeFinal)
+                ]
+            ]
+        ]
+
+
+showQuarterFinals : Maybe (List Fixture) -> Html Msg
+showQuarterFinals maybeQuarterFinals =
+    let
+        maybeFirstQuarterFinal =
+            case maybeQuarterFinals of
+                Just quarterFinals ->
+                    List.head quarterFinals
+
+                Nothing ->
+                    Nothing
+
+        maybeSecondQuarterFinal =
+            case maybeQuarterFinals of
+                Just quarterFinals ->
+                    List.head (List.drop 1 quarterFinals)
+
+                Nothing ->
+                    Nothing
+
+        maybeThirdQuarterFinal =
+            case maybeQuarterFinals of
+                Just quarterFinals ->
+                    List.head (List.drop 2 quarterFinals)
+
+                Nothing ->
+                    Nothing
+
+        maybeFourthQuarterFinal =
+            case maybeQuarterFinals of
+                Just quarterFinals ->
+                    List.head (List.drop 3 quarterFinals)
+
+                Nothing ->
+                    Nothing
+    in
+    verticalTile Auto
+        []
+        [ p [ class "title" ] [ text "Quarter Finals" ]
+        , tileChild Auto
+            []
+            [ level []
+                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group A"
+                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group B"
+                ]
+            ]
+        , tileChild Auto
+            []
+            [ level []
+                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group B"
+                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group A"
+                ]
+            ]
+        , tileChild Auto
+            []
+            [ level []
+                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group C"
+                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group D"
+                ]
+            ]
+        , tileChild Auto
+            []
+            [ level []
+                [ easyLevelItemWithHeading [ class "has-text-centered" ] "Winner" "Group D"
+                , levelItemText [ class "has-text-centered" ] [ text "v" ]
+                , easyLevelItemWithHeading [ class "has-text-centered" ] "Runner Up" "Group C"
+                ]
+            ]
+        ]
+
+
+showSemiFinals : Maybe (List Fixture) -> Html Msg
+showSemiFinals maybeSemiFinals =
+    let
+        maybeFirstSemiFinal =
+            case maybeSemiFinals of
+                Just semiFinals ->
+                    List.head semiFinals
+
+                Nothing ->
+                    Nothing
+
+        maybeSecondSemiFinal =
+            case maybeSemiFinals of
+                Just semiFinals ->
+                    List.head (List.reverse semiFinals)
+
+                Nothing ->
+                    Nothing
+
+        firstSemiFinalLeftTeam =
+            case maybeFirstSemiFinal of
+                Just firstSemiFinal ->
+                    firstSemiFinal.homeTeam
+
+                Nothing ->
+                    "QF 3"
+
+        firstSemiFinalRightTeam =
+            case maybeFirstSemiFinal of
+                Just firstSemiFinal ->
+                    firstSemiFinal.awayTeam
+
+                Nothing ->
+                    "QF 1"
+
+        secondSemiFinalLeftTeam =
+            case maybeSecondSemiFinal of
+                Just secondSemiFinal ->
+                    secondSemiFinal.homeTeam
+
+                Nothing ->
+                    "QF 4"
+
+        secondSemiFinalRightTeam =
+            case maybeSecondSemiFinal of
+                Just secondSemiFinal ->
+                    secondSemiFinal.awayTeam
+
+                Nothing ->
+                    "QF 2"
+
+        firstTileChild =
+            case maybeFirstSemiFinal of
+                Just _ ->
+                    getKnownTeamsTileChild firstSemiFinalLeftTeam firstSemiFinalRightTeam
+
+                Nothing ->
+                    getTBDTileChild firstSemiFinalLeftTeam firstSemiFinalRightTeam
+
+        secondTileChild =
+            case maybeSecondSemiFinal of
+                Just _ ->
+                    getKnownTeamsTileChild secondSemiFinalLeftTeam secondSemiFinalRightTeam
+
+                Nothing ->
+                    getTBDTileChild secondSemiFinalLeftTeam secondSemiFinalRightTeam
+    in
+    verticalTile Auto
+        []
+        [ p [ class "title" ] [ text "Semi Finals" ]
+        , firstTileChild
+        , secondTileChild
+        ]
+
+
+getFinalWinner : Maybe Fixture -> String
+getFinalWinner maybeFinal =
+    let
+        finalWinner =
+            case maybeFinal of
+                Just final ->
+                    getFixtureWinner final
+
+                Nothing ->
+                    "TBD"
+    in
+    case finalWinner of
+        "" ->
+            "TBD"
+
+        _ ->
+            finalWinner
 
 
 groupsTabs : Model -> Tabs Msg
@@ -254,8 +430,11 @@ groupsContentTableBody model =
     case activeGroup of
         Just group ->
             let
-                groupTeamsByPoints = teamsOrderedByPoints group
-                teamsWithPositions = List.indexedMap Tuple.pair groupTeamsByPoints
+                groupTeamsByPoints =
+                    teamsOrderedByPoints group
+
+                teamsWithPositions =
+                    List.indexedMap Tuple.pair groupTeamsByPoints
             in
             tableBody [] (List.map teamRow teamsWithPositions)
 
@@ -352,8 +531,8 @@ isDraw fixture =
     fixture.result == Just Draw
 
 
-teamRow : (Int, TeamStats) -> TableRow Msg
-teamRow (position, teamStats) =
+teamRow : ( Int, TeamStats ) -> TableRow Msg
+teamRow ( position, teamStats ) =
     tableRow False
         []
         [ tableCell [] [ text (String.fromInt (position + 1)) ]
@@ -440,48 +619,83 @@ getQuarterFinalFixtures groups =
     in
     [ quarterFinal1, quarterFinal2, quarterFinal3, quarterFinal4 ]
 
+
 getSemiFinalFixtures : List Fixture -> List Fixture
 getSemiFinalFixtures quarterFinalResults =
     let
-        winners = List.map getFixtureWinner quarterFinalResults
-        firstPair = List.take 2 winners
-        secondPair = List.take 2 (List.drop 2 winners)
-        firstSemiFinalHomeTeam = getTeamFromList firstPair
-        firstSemiFinalAwayTeam = getTeamFromList(List.drop 1 firstPair)
-        secondSemiFinalHomeTeam = getTeamFromList secondPair
-        secondSemiFinalAwayTeam = getTeamFromList (List.drop 1 secondPair)
-        firstSemiFinal = { homeTeam = firstSemiFinalHomeTeam, awayTeam = firstSemiFinalAwayTeam, round = SemiFinal, result = Nothing }
-        secondSemiFinal = { homeTeam = secondSemiFinalHomeTeam, awayTeam = secondSemiFinalAwayTeam, round = SemiFinal, result = Nothing }
-    in
-    [firstSemiFinal, secondSemiFinal]
+        winners =
+            List.map getFixtureWinner quarterFinalResults
 
+        firstPair =
+            List.take 2 winners
+
+        secondPair =
+            List.take 2 (List.drop 2 winners)
+
+        firstSemiFinalHomeTeam =
+            getTeamFromList secondPair
+
+        firstSemiFinalAwayTeam =
+            getTeamFromList firstPair
+
+        secondSemiFinalHomeTeam =
+            getTeamFromList (List.drop 1 secondPair)
+
+        secondSemiFinalAwayTeam =
+            getTeamFromList (List.drop 1 firstPair)
+
+        firstSemiFinal =
+            { homeTeam = firstSemiFinalHomeTeam, awayTeam = firstSemiFinalAwayTeam, round = SemiFinal, result = Nothing }
+
+        secondSemiFinal =
+            { homeTeam = secondSemiFinalHomeTeam, awayTeam = secondSemiFinalAwayTeam, round = SemiFinal, result = Nothing }
+    in
+    [ firstSemiFinal, secondSemiFinal ]
 
 
 getFinalFixture : List Fixture -> Fixture
 getFinalFixture semiFinalResults =
     let
-        winners = List.map getFixtureWinner semiFinalResults
-        firstTeam = getTeamFromList winners
-        secondTeam = getTeamFromList (List.drop 1 winners)
+        winners =
+            List.map getFixtureWinner semiFinalResults
+
+        firstTeam =
+            getTeamFromList winners
+
+        secondTeam =
+            getTeamFromList (List.drop 1 winners)
     in
     { homeTeam = firstTeam, awayTeam = secondTeam, round = Final, result = Nothing }
 
-getTeamFromList: List String -> String
+
+getTeamFromList : List String -> String
 getTeamFromList teams =
     let
-        maybeTeam = List.head (List.take 1 teams)
+        maybeTeam =
+            List.head (List.take 1 teams)
     in
     case maybeTeam of
-        Just team -> team
-        Nothing -> ""
+        Just team ->
+            team
+
+        Nothing ->
+            ""
+
 
 getFixtureWinner : Fixture -> String
 getFixtureWinner fixture =
     case fixture.result of
-        Just HomeWin -> fixture.homeTeam
-        Just Draw -> fixture.homeTeam
-        Just HomeLoss -> fixture.awayTeam
-        Nothing -> ""
+        Just HomeWin ->
+            fixture.homeTeam
+
+        Just Draw ->
+            fixture.homeTeam
+
+        Just HomeLoss ->
+            fixture.awayTeam
+
+        Nothing ->
+            ""
 
 
 getGroupByName : String -> List Group -> Group
@@ -591,40 +805,70 @@ playRound model =
 
         updatedQuarterFinals =
             case justPlayedRound of
-                Just Round3 -> Just (getQuarterFinalFixtures model.groups)
-                Just QuarterFinal -> Just (Tuple.first (playFixtures model.randomFloat model.quarterFinalFixtures (getAllTeams model.groups)))
-                Just SemiFinal -> model.quarterFinalFixtures
-                Just Final -> model.quarterFinalFixtures
-                _ -> Nothing
+                Just Round3 ->
+                    Just (getQuarterFinalFixtures model.groups)
+
+                Just QuarterFinal ->
+                    Just (Tuple.first (playFixtures model.randomFloat model.quarterFinalFixtures (getAllTeams model.groups)))
+
+                Just SemiFinal ->
+                    model.quarterFinalFixtures
+
+                Just Final ->
+                    model.quarterFinalFixtures
+
+                _ ->
+                    Nothing
 
         quarterFinalFixtures =
             case updatedQuarterFinals of
-                Just fixtures -> fixtures
-                Nothing -> []
+                Just fixtures ->
+                    fixtures
+
+                Nothing ->
+                    []
 
         updatedSemiFinals =
             case justPlayedRound of
-                Just QuarterFinal -> Just (getSemiFinalFixtures quarterFinalFixtures)
-                Just SemiFinal -> Just (Tuple.first (playFixtures model.randomFloat model.semiFinalFixtures (getAllTeams model.groups)))
-                Just Final -> model.semiFinalFixtures
-                _ -> Nothing
+                Just QuarterFinal ->
+                    Just (getSemiFinalFixtures quarterFinalFixtures)
+
+                Just SemiFinal ->
+                    Just (Tuple.first (playFixtures model.randomFloat model.semiFinalFixtures (getAllTeams model.groups)))
+
+                Just Final ->
+                    model.semiFinalFixtures
+
+                _ ->
+                    Nothing
 
         semiFinalFixtures =
             case updatedSemiFinals of
-                Just fixtures -> fixtures
-                Nothing -> []
+                Just fixtures ->
+                    fixtures
+
+                Nothing ->
+                    []
 
         updatedFinal =
             case justPlayedRound of
-                Just SemiFinal -> Just (getFinalFixture semiFinalFixtures)
+                Just SemiFinal ->
+                    Just (getFinalFixture semiFinalFixtures)
+
                 Just Final ->
                     let
-                        x = case model.finalFixture of
-                            Just final -> Just (playFixture model.randomFloat (getAllTeams model.groups) final)
-                            Nothing -> Nothing
+                        x =
+                            case model.finalFixture of
+                                Just final ->
+                                    Just (playFixture model.randomFloat (getAllTeams model.groups) final)
+
+                                Nothing ->
+                                    Nothing
                     in
                     x
-                _ -> Nothing
+
+                _ ->
+                    Nothing
     in
     { model
         | groups = updatedGroups
@@ -634,11 +878,13 @@ playRound model =
         , finalFixture = updatedFinal
     }
 
+
 getAllTeams : List Group -> List Team
 getAllTeams groups =
     List.concat (List.map getGroupTeams groups)
 
-getGroupTeams: Group -> List Team
+
+getGroupTeams : Group -> List Team
 getGroupTeams group =
     group.teams
 
@@ -714,8 +960,11 @@ playFixtures randomFloat maybeFixtures teams =
     let
         updatedFixtures =
             case maybeFixtures of
-                Just fixtures -> List.map (playFixture randomFloat teams) fixtures
-                Nothing -> []
+                Just fixtures ->
+                    List.map (playFixture randomFloat teams) fixtures
+
+                Nothing ->
+                    []
     in
     ( updatedFixtures, teams )
 
