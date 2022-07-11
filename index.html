@@ -11543,6 +11543,7 @@ var $author$project$Main$getGroupByName = F2(
 			return {fixtures: _List_Nil, name: '', teams: _List_Nil};
 		}
 	});
+var $elm$core$Debug$log = _Debug_log;
 var $elm$core$List$tail = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -11644,6 +11645,7 @@ var $author$project$Main$getGroupRunnerUp = function (group) {
 		}
 	}();
 	var maybeRunnerUp = $elm$core$List$head(teams);
+	var _v0 = A2($elm$core$Debug$log, 'Team stats ', teams);
 	if (maybeRunnerUp.$ === 'Just') {
 		var runnerUp = maybeRunnerUp.a;
 		return runnerUp.name;
@@ -11930,7 +11932,7 @@ var $author$project$Main$playRound = function (model) {
 					case 'Round3':
 						var _v11 = justPlayedRound.a;
 						return $elm$core$Maybe$Just(
-							$author$project$Main$getQuarterFinalFixtures(model.groups));
+							$author$project$Main$getQuarterFinalFixtures(updatedGroups));
 					case 'QuarterFinal':
 						var _v12 = justPlayedRound.a;
 						return $elm$core$Maybe$Just(
@@ -11938,7 +11940,7 @@ var $author$project$Main$playRound = function (model) {
 								$author$project$Main$playFixtures,
 								model.randomFloat,
 								model.quarterFinalFixtures,
-								$author$project$Main$getAllTeams(model.groups)).a);
+								$author$project$Main$getAllTeams(updatedGroups)).a);
 					case 'SemiFinal':
 						var _v13 = justPlayedRound.a;
 						return model.quarterFinalFixtures;
@@ -11978,7 +11980,7 @@ var $author$project$Main$playRound = function (model) {
 								$author$project$Main$playFixtures,
 								model.randomFloat,
 								model.semiFinalFixtures,
-								$author$project$Main$getAllTeams(model.groups)).a);
+								$author$project$Main$getAllTeams(updatedGroups)).a);
 					case 'Final':
 						var _v8 = justPlayedRound.a;
 						return model.semiFinalFixtures;
@@ -12018,7 +12020,7 @@ var $author$project$Main$playRound = function (model) {
 									A3(
 										$author$project$Main$playFixture,
 										model.randomFloat,
-										$author$project$Main$getAllTeams(model.groups),
+										$author$project$Main$getAllTeams(updatedGroups),
 										_final));
 							} else {
 								return $elm$core$Maybe$Nothing;
@@ -12929,7 +12931,7 @@ var $author$project$Main$getKnownTeamsTileChild = F2(
 						]))
 				]));
 	});
-var $author$project$Main$getTBDLevelItem = function (placeholder) {
+var $author$project$Main$getTBDWinnerLevelItem = function (placeholder) {
 	return A3(
 		$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
 		_List_fromArray(
@@ -12939,7 +12941,7 @@ var $author$project$Main$getTBDLevelItem = function (placeholder) {
 		'Winner',
 		placeholder);
 };
-var $author$project$Main$getTBDTileChild = F2(
+var $author$project$Main$getTBDWinnersTileChild = F2(
 	function (placeholder1, placeholder2) {
 		return A3(
 			$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
@@ -12952,9 +12954,9 @@ var $author$project$Main$getTBDTileChild = F2(
 					_List_Nil,
 					_List_fromArray(
 						[
-							$author$project$Main$getTBDLevelItem(placeholder1),
+							$author$project$Main$getTBDWinnerLevelItem(placeholder1),
 							$author$project$Main$getVLevelItem,
-							$author$project$Main$getTBDLevelItem(placeholder2)
+							$author$project$Main$getTBDWinnerLevelItem(placeholder2)
 						]))
 				]));
 	});
@@ -13018,7 +13020,7 @@ var $author$project$Main$showFinal = function (maybeFinal) {
 		if (maybeFinal.$ === 'Just') {
 			return A2($author$project$Main$getKnownTeamsTileChild, finalLeftTeam, finalRightTeam);
 		} else {
-			return A2($author$project$Main$getTBDTileChild, finalLeftTeam, finalRightTeam);
+			return A2($author$project$Main$getTBDWinnersTileChild, finalLeftTeam, finalRightTeam);
 		}
 	}();
 	return A3(
@@ -13061,6 +13063,35 @@ var $author$project$Main$showFinal = function (maybeFinal) {
 					]))
 			]));
 };
+var $author$project$Main$getTBDRunnerUpLevelItem = function (placeholder) {
+	return A3(
+		$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('has-text-centered')
+			]),
+		'Runner Up',
+		placeholder);
+};
+var $author$project$Main$getTBDWinnerAndRunnerUpTileChild = F2(
+	function (placeholder1, placeholder2) {
+		return A3(
+			$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
+			$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$surprisetalk$elm_bulma$Bulma$Layout$level,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$author$project$Main$getTBDWinnerLevelItem(placeholder1),
+							$author$project$Main$getVLevelItem,
+							$author$project$Main$getTBDRunnerUpLevelItem(placeholder2)
+						]))
+				]));
+	});
 var $author$project$Main$showQuarterFinals = function (maybeQuarterFinals) {
 	var maybeThirdQuarterFinal = function () {
 		if (maybeQuarterFinals.$ === 'Just') {
@@ -13071,6 +13102,14 @@ var $author$project$Main$showQuarterFinals = function (maybeQuarterFinals) {
 			return $elm$core$Maybe$Nothing;
 		}
 	}();
+	var thirdTileChild = function () {
+		if (maybeThirdQuarterFinal.$ === 'Just') {
+			var quarterFinal = maybeThirdQuarterFinal.a;
+			return A2($author$project$Main$getKnownTeamsTileChild, quarterFinal.homeTeam, quarterFinal.awayTeam);
+		} else {
+			return A2($author$project$Main$getTBDWinnerAndRunnerUpTileChild, 'Group C', 'Group D');
+		}
+	}();
 	var maybeSecondQuarterFinal = function () {
 		if (maybeQuarterFinals.$ === 'Just') {
 			var quarterFinals = maybeQuarterFinals.a;
@@ -13078,6 +13117,14 @@ var $author$project$Main$showQuarterFinals = function (maybeQuarterFinals) {
 				A2($elm$core$List$drop, 1, quarterFinals));
 		} else {
 			return $elm$core$Maybe$Nothing;
+		}
+	}();
+	var secondTileChild = function () {
+		if (maybeSecondQuarterFinal.$ === 'Just') {
+			var quarterFinal = maybeSecondQuarterFinal.a;
+			return A2($author$project$Main$getKnownTeamsTileChild, quarterFinal.homeTeam, quarterFinal.awayTeam);
+		} else {
+			return A2($author$project$Main$getTBDWinnerAndRunnerUpTileChild, 'Group B', 'Group A');
 		}
 	}();
 	var maybeFourthQuarterFinal = function () {
@@ -13097,6 +13144,22 @@ var $author$project$Main$showQuarterFinals = function (maybeQuarterFinals) {
 			return $elm$core$Maybe$Nothing;
 		}
 	}();
+	var fourthTileChild = function () {
+		if (maybeFourthQuarterFinal.$ === 'Just') {
+			var quarterFinal = maybeFourthQuarterFinal.a;
+			return A2($author$project$Main$getKnownTeamsTileChild, quarterFinal.homeTeam, quarterFinal.awayTeam);
+		} else {
+			return A2($author$project$Main$getTBDWinnerAndRunnerUpTileChild, 'Group D', 'Group C');
+		}
+	}();
+	var firstTileChild = function () {
+		if (maybeFirstQuarterFinal.$ === 'Just') {
+			var quarterFinal = maybeFirstQuarterFinal.a;
+			return A2($author$project$Main$getKnownTeamsTileChild, quarterFinal.homeTeam, quarterFinal.awayTeam);
+		} else {
+			return A2($author$project$Main$getTBDWinnerAndRunnerUpTileChild, 'Group A', 'Group B');
+		}
+	}();
 	return A3(
 		$surprisetalk$elm_bulma$Bulma$Layout$verticalTile,
 		$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
@@ -13113,162 +13176,10 @@ var $author$project$Main$showQuarterFinals = function (maybeQuarterFinals) {
 					[
 						$elm$html$Html$text('Quarter Finals')
 					])),
-				A3(
-				$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
-				$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$surprisetalk$elm_bulma$Bulma$Layout$level,
-						_List_Nil,
-						_List_fromArray(
-							[
-								A3(
-								$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								'Winner',
-								'Group A'),
-								A2(
-								$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('v')
-									])),
-								A3(
-								$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								'Runner Up',
-								'Group B')
-							]))
-					])),
-				A3(
-				$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
-				$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$surprisetalk$elm_bulma$Bulma$Layout$level,
-						_List_Nil,
-						_List_fromArray(
-							[
-								A3(
-								$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								'Winner',
-								'Group B'),
-								A2(
-								$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('v')
-									])),
-								A3(
-								$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								'Runner Up',
-								'Group A')
-							]))
-					])),
-				A3(
-				$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
-				$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$surprisetalk$elm_bulma$Bulma$Layout$level,
-						_List_Nil,
-						_List_fromArray(
-							[
-								A3(
-								$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								'Winner',
-								'Group C'),
-								A2(
-								$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('v')
-									])),
-								A3(
-								$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								'Runner Up',
-								'Group D')
-							]))
-					])),
-				A3(
-				$surprisetalk$elm_bulma$Bulma$Layout$tileChild,
-				$surprisetalk$elm_bulma$Bulma$Modifiers$Auto,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$surprisetalk$elm_bulma$Bulma$Layout$level,
-						_List_Nil,
-						_List_fromArray(
-							[
-								A3(
-								$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								'Winner',
-								'Group D'),
-								A2(
-								$surprisetalk$elm_bulma$Bulma$Layout$levelItemText,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								_List_fromArray(
-									[
-										$elm$html$Html$text('v')
-									])),
-								A3(
-								$surprisetalk$elm_bulma$Bulma$Layout$easyLevelItemWithHeading,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('has-text-centered')
-									]),
-								'Runner Up',
-								'Group C')
-							]))
-					]))
+				firstTileChild,
+				secondTileChild,
+				thirdTileChild,
+				fourthTileChild
 			]));
 };
 var $author$project$Main$showSemiFinals = function (maybeSemiFinals) {
@@ -13301,7 +13212,7 @@ var $author$project$Main$showSemiFinals = function (maybeSemiFinals) {
 		if (maybeSecondSemiFinal.$ === 'Just') {
 			return A2($author$project$Main$getKnownTeamsTileChild, secondSemiFinalLeftTeam, secondSemiFinalRightTeam);
 		} else {
-			return A2($author$project$Main$getTBDTileChild, secondSemiFinalLeftTeam, secondSemiFinalRightTeam);
+			return A2($author$project$Main$getTBDWinnersTileChild, secondSemiFinalLeftTeam, secondSemiFinalRightTeam);
 		}
 	}();
 	var maybeFirstSemiFinal = function () {
@@ -13332,7 +13243,7 @@ var $author$project$Main$showSemiFinals = function (maybeSemiFinals) {
 		if (maybeFirstSemiFinal.$ === 'Just') {
 			return A2($author$project$Main$getKnownTeamsTileChild, firstSemiFinalLeftTeam, firstSemiFinalRightTeam);
 		} else {
-			return A2($author$project$Main$getTBDTileChild, firstSemiFinalLeftTeam, firstSemiFinalRightTeam);
+			return A2($author$project$Main$getTBDWinnersTileChild, firstSemiFinalLeftTeam, firstSemiFinalRightTeam);
 		}
 	}();
 	return A3(
